@@ -22,13 +22,13 @@
   <a href="CONTRIBUTING.md">参与贡献</a>
 </p>
 
-## 界面预览
+## 真机界面
 
-| 首页账本 | 收支统计 | 账户资产 | 识别设置 |
-| :---: | :---: | :---: | :---: |
-| <img src=".github/screenshots/ledger.webp" width="220" alt="首页账本：当月收支、每日趋势与账单列表" /> | <img src=".github/screenshots/stats.webp" width="220" alt="收支统计：分类占比和支出排行" /> | <img src=".github/screenshots/assets.webp" width="220" alt="账户资产：手动维护的资产、负债与净资产" /> | <img src=".github/screenshots/settings.webp" width="220" alt="识别设置：支付页面自动识别、摇一摇及账单备份入口" /> |
+以下截图由使用者提供，来自真实手机执行记录。收款人昵称、交易与商户单号、条码、具体站点等隐私信息已遮挡；状态栏已裁去，原有金额、商户图标和识别结果保留。
 
-以上为当前应用页面在浏览器中渲染的界面预览，使用演示账单与账户数据；Android 中的实际识别过程见下方。
+| 真实首页账本 | 退款账单详情 |
+| :---: | :---: |
+| <img src=".github/screenshots/real-ledger.webp" width="280" alt="真实手机账本：已入账记录及摇一摇、自动记账来源标签" /> | <img src=".github/screenshots/real-refund-detail.webp" width="280" alt="真实退款明细：原付100元、退款67.23元、实付32.77元，隐私区域已遮挡" /> |
 
 ## 能做什么
 
@@ -86,21 +86,17 @@
 
 ## 识别与入账效果
 
-以下为 **Android 11 模拟器中的实际运行截图**，使用合成交易页面，运行系统截图、内置 OCR 与本地入账。**演示未发生真实转账，不是微信或支付宝的付款实录。**
+以下均为使用者提供的**真实手机执行截图**，展示微信转账结果、账单识别和退款后的净额入账。截图只说明图中这些执行记录，不代表所有支付页面、机型或应用版本都已覆盖。
 
-### 支付结果页自动记账
+| 微信转账结果 | 微信账单识别 | 退款后净额识别 |
+| :---: | :---: | :---: |
+| <img src=".github/screenshots/real-wechat-transfer.webp" width="250" alt="真实微信转账结果页：已记账0.01元，收款人昵称已打码" /> | <img src=".github/screenshots/real-wechat-bill.webp" width="250" alt="真实微信账单详情：已记账28元，时间、行程、交易单号及条码已打码" /> | <img src=".github/screenshots/real-refund-source.webp" width="250" alt="真实退款账单：原付100元、已退67.23元，已记账32.77元，隐私字段已打码" /> |
 
-进入支持的支付成功页 → 出现「已记账 ¥12.34」提示 → 账本新增「自动记账」记录。
+- **转账结果**：页面显示「已记账 ¥0.01」，收款人仍处于待确认状态。
+- **账单识别**：¥28.00 的微信账单详情页显示对应的记账成功提示。
+- **部分退款**：原付 ¥100.00，已退 ¥67.23，按净支出 **¥32.77** 入账；上方真机账本与详情页显示相同金额，并保留「原付 · 已退 · 实付」信息。
 
-![支付结果页自动入账：合成支付成功页面、已记账提示与新增账本记录](.github/screenshots/auto-payment.webp)
-
-### 摇一摇补记
-
-打开未被自动采集的账单详情 → 摇动触发识别 → 新增「摇一摇」记录。本例通过模拟器的**虚拟加速度计**触发应用摇动监听，账本从 1 笔变为 2 笔，支出合计 ¥24.68。
-
-![摇一摇补记：合成账单详情与传感器触发后新增的摇一摇记录](.github/screenshots/shake-capture.webp)
-
-两条流程均已核对识别任务成功状态和实际入账金额；真实支付应用的页面版本与机型兼容性仍需分别验证。图片可点击放大。
+账本中的来源标签可区分「自动记账」与「摇一摇」。图片可点击放大。
 
 ## OCR 选型、调优与测试
 
@@ -145,7 +141,7 @@ V5 检测与识别 ONNX 权重合计约 **20.37 MiB**，V6 Tiny 约 **5.95 MiB**
 
 模型与运行库精简后，使用相同 19 张图各两轮，比较 OCR 原文、文字框坐标、解析全字段、退款判断与图片尺寸；38 次输出与对应旧基线逐项一致，包含原有错误，不以删掉失败样例提高成绩。
 
-当前保留金额/退款/商户解析、取消与并发、真实 JPEG → 内置 OCR → 图标裁剪 → 本地入账的测试，以及 **216 种**位置、比例、背景与陌生图形组合。图标与 OCR 相关回归已加入 [Android CI](.github/workflows/android.yml) 必跑列表；CI 配置不等于每次托管运行都已通过。模拟器合成支付页的自动识别、虚拟传感器摇一摇与实际入账展示见上文；这些不替代真实微信/支付宝各版本的手机验证。
+当前保留金额/退款/商户解析、取消与并发、真实 JPEG → 内置 OCR → 图标裁剪 → 本地入账的测试，以及 **216 种**位置、比例、背景与陌生图形组合。图标与 OCR 相关回归已加入 [Android CI](.github/workflows/android.yml) 必跑列表；CI 配置不等于每次托管运行都已通过。合成支付页与虚拟传感器用于自动化回归；上方真机截图展示使用者实际执行成功的个例，仍需持续验证不同微信/支付宝版本与手机系统。
 
 可执行检查见[源码构建与验证](#从源码构建)，主要用例见 [LocalRecognitionClientTest](app/src/androidTest/java/net/ankio/ledger/ocr/LocalRecognitionClientTest.kt)、[IconGeneralityTest](app/src/androidTest/java/net/ankio/ledger/ocr/IconGeneralityTest.kt) 和 [core 测试](core/src/test/kotlin/net/ankio/ledger/core)。
 
