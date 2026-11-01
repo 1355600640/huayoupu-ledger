@@ -13,3 +13,8 @@ gradlew text eol=lf
 /artifacts export-ignore
 /.impeccable export-ignore
 /.taste-skill export-ignore
+
+# Preserve upstream license bytes required by the pinned checksums.
+LICENSE -text
+app/src/main/assets/licenses/** -text
+third_party/ocr-runtime/licenses/** -text
