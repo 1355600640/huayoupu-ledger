@@ -100,6 +100,8 @@ class BackgroundSettingsSyncTest {
         web.run("setTimeout(()=>document.querySelector('#setup-primary').click(),0)")
         screenshot(app,automation,"background-recents.png")
         automation.performGlobalAction(1)
+        // Back from recents may leave the launcher foreground; resume the existing task.
+        app.getSystemService(android.app.ActivityManager::class.java).appTasks.single().moveToFront()
         scenario.moveToState(androidx.lifecycle.Lifecycle.State.RESUMED)
         web.ready()
         web.run("document.querySelector('[data-setup-action=\"reset:task_lock\"]').click()")
