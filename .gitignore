@@ -1,0 +1,40 @@
+.gradle/
+.kotlin/
+**/build/
+local.properties
+.upstream-review/
+.tools/
+.idea/
+*.iml
+*.jks
+*.keystore
+artifacts/
+
+# Image service job records may contain temporary result URLs.
+output/branding/*.job.json
+
+# Local evidence, caches, private data and signing material.
+output/
+node_modules/
+**/node_modules/
+__pycache__/
+*.pyc
+*.log
+*.hprof
+*.apk
+*.aab
+*.db
+*.sqlite
+*.sqlite3
+.env
+.env.*
+!.env.example
+.impeccable/
+.taste-skill/
+.vscode/
+.DS_Store
+Thumbs.db
+ci-artifacts/
+
+# JVM crash dumps are disposable local diagnostics.
+hs_err_pid*.log

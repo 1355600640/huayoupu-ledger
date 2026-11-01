@@ -1,0 +1,8 @@
+{
+  "name": "huiming-release-web-protection",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Build-time-only protection for owned WebView JavaScript; not included as an app dependency.",
+  "engines": { "node": ">=18.0.0" },
+  "dependencies": { "javascript-obfuscator": "5.9.0" }
+}

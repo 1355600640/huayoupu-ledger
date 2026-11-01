@@ -1,0 +1,29 @@
+name: 缺陷报告
+description: 使用合成或脱敏数据描述可复现的问题
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: 请勿上传真实账本、截图、密钥或未脱敏诊断。安全漏洞先阅读 SECURITY.md。
+  - type: input
+    id: environment
+    attributes:
+      label: 应用版本、Android 版本与设备型号
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 复现步骤（含初始状态与必要权限）
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: 预期结果与实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 合成或脱敏证据（可选）

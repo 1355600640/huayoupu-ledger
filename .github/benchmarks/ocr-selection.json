@@ -1,0 +1,334 @@
+{
+  "experimentDate": "2026-10-19",
+  "scope": "Archived small-corpus research, not current production performance or a phone benchmark. Raw screenshots and the retired research harness are not distributed.",
+  "method": {
+    "device": "API 30 sdk_gphone_x86_64, native x86_64, separate single-engine processes",
+    "inputMaxSide": 1800,
+    "realUniqueImages": 13,
+    "realExpenses": 10,
+    "realRefundNegatives": 3,
+    "syntheticUniqueImages": 6,
+    "rounds": 2,
+    "accuracyPolicy": "Only unique first-round images count; second round measures warm timing and repeat stability",
+    "timingScope": "recognize including backend preprocessing; excludes screenshot acquisition, common decode, parsing, persistence and UI; engine is reused",
+    "p95": "nearest rank, n=13",
+    "order": "V6 then ML Kit after builds completed",
+    "apkScope": "Standalone ARM64 research release APKs, same harness/parser/R8; not the complete ledger app or installed size"
+  },
+  "engines": [
+    {
+      "engine": "paddle-v6-tiny",
+      "initMs": 101,
+      "firstRequestMs": 719,
+      "warmRealOcrMs": {
+        "median": 464,
+        "p95NearestRank": 559,
+        "min": 293,
+        "max": 559,
+        "n": 13
+      },
+      "runtimeErrors": 0,
+      "repeatFieldChanges": 0,
+      "realMetrics": {
+        "rawAmountRecall": {
+          "correct": 10,
+          "total": 10
+        },
+        "finalAmount": {
+          "correct": 10,
+          "total": 10
+        },
+        "reliableAmount": {
+          "correct": 10,
+          "total": 10
+        },
+        "rawMerchantExactSubstring": {
+          "correct": 8,
+          "total": 9
+        },
+        "parsedMerchantExact": {
+          "correct": 4,
+          "total": 9
+        },
+        "rawOrderId": {
+          "correct": 7,
+          "total": 7
+        },
+        "parsedOrderIdExact": {
+          "correct": 7,
+          "total": 7
+        },
+        "rejectRefundOrNegative": {
+          "correct": 3,
+          "total": 3
+        }
+      },
+      "syntheticMetrics": {
+        "rawAmountRecall": {
+          "correct": 2,
+          "total": 2
+        },
+        "finalAmount": {
+          "correct": 2,
+          "total": 2
+        },
+        "reliableAmount": {
+          "correct": 2,
+          "total": 2
+        },
+        "rawMerchantExactSubstring": {
+          "correct": 2,
+          "total": 2
+        },
+        "parsedMerchantExact": {
+          "correct": 2,
+          "total": 2
+        },
+        "rawOrderId": {
+          "correct": 2,
+          "total": 2
+        },
+        "parsedOrderIdExact": {
+          "correct": 2,
+          "total": 2
+        },
+        "rejectRefundOrNegative": {
+          "correct": 4,
+          "total": 4
+        }
+      },
+      "standaloneArm64Apk": {
+        "bytes": 21429980,
+        "sha256": "c9986486778c60b22a367e2eccb9e2de51b42b2ea7e28a23333805706e03254c"
+      }
+    },
+    {
+      "engine": "mlkit",
+      "initMs": 5,
+      "firstRequestMs": 1275,
+      "warmRealOcrMs": {
+        "median": 1140,
+        "p95NearestRank": 2173,
+        "min": 395,
+        "max": 2173,
+        "n": 13
+      },
+      "runtimeErrors": 0,
+      "repeatFieldChanges": 0,
+      "realMetrics": {
+        "rawAmountRecall": {
+          "correct": 10,
+          "total": 10
+        },
+        "finalAmount": {
+          "correct": 9,
+          "total": 10
+        },
+        "reliableAmount": {
+          "correct": 9,
+          "total": 10
+        },
+        "rawMerchantExactSubstring": {
+          "correct": 7,
+          "total": 9
+        },
+        "parsedMerchantExact": {
+          "correct": 4,
+          "total": 9
+        },
+        "rawOrderId": {
+          "correct": 7,
+          "total": 7
+        },
+        "parsedOrderIdExact": {
+          "correct": 6,
+          "total": 7
+        },
+        "rejectRefundOrNegative": {
+          "correct": 3,
+          "total": 3
+        }
+      },
+      "syntheticMetrics": {
+        "rawAmountRecall": {
+          "correct": 2,
+          "total": 2
+        },
+        "finalAmount": {
+          "correct": 1,
+          "total": 2
+        },
+        "reliableAmount": {
+          "correct": 1,
+          "total": 2
+        },
+        "rawMerchantExactSubstring": {
+          "correct": 2,
+          "total": 2
+        },
+        "parsedMerchantExact": {
+          "correct": 2,
+          "total": 2
+        },
+        "rawOrderId": {
+          "correct": 2,
+          "total": 2
+        },
+        "parsedOrderIdExact": {
+          "correct": 2,
+          "total": 2
+        },
+        "rejectRefundOrNegative": {
+          "correct": 4,
+          "total": 4
+        }
+      },
+      "standaloneArm64Apk": {
+        "bytes": 14613207,
+        "sha256": "f67ce197b4dd63f6c4b806a4b041d55b2af781418c7eae188e78c22b8f898ca0"
+      }
+    }
+  ],
+  "initialThreeEngineExperiment": {
+    "requests": 114,
+    "independentImages": 19,
+    "engines": [
+      "ML Kit Chinese bundled 16.0.1",
+      "PP-OCRv5 mobile",
+      "PP-OCRv6 tiny"
+    ],
+    "onnxWeightsBytes": {
+      "v5": 21361300,
+      "v6": 6243229
+    }
+  },
+  "sourceSummarySha256": {
+    "summary": "161d32cfbaa27d79481045e1e5221d77aaa13a3948fefe30ac4e21edf139d731",
+    "v6-compact-summary": "23eb8b3be8506834abc1a0a8a90220550e6ab6f4b1e72fdcae99d3e7eb2d9df7",
+    "mlkit-final-summary": "71ae4619b81aa42b92867a33fe8db4d8b0ea77301bcef4a030fd9ae3bf45cc0d",
+    "v6-compact-sizes": "6ca81ea5247adb9315425d5cb3481b62569947a6a61151c1c494efb8352a301a",
+    "mlkit-only-sizes": "7a263246e72245a37209dabbddbe17f2fc6b86b0b9f08b185b85313d931b1f61",
+    "runtime-memory-comparison": "d2a2900d910d1cf886bc3e831a1a05343352e0e7d1df76dfe0e1c2a147a5e960"
+  },
+  "limits": [
+    "Small fixed corpus, no randomized order or ARM64 physical-device inference",
+    "Historical merchant extraction was 4/9 for both; subsequent parser/icon fixes do not update these old scores",
+    "No end-to-end latency, peak memory, battery or OEM background guarantee"
+  ],
+  "historicalMemoryPolicyTrials": {
+    "scope": "Same API 30 emulator, separate processes and reversed test order, engines reused. Not current full pipeline or phone memory/latency.",
+    "configurations": [
+      {
+        "configuration": "v6-default",
+        "timingTrials": [
+          {
+            "trial": "v6-baseline-normal",
+            "initMs": 103,
+            "firstRequestMs": 618,
+            "warmRealOcrMs": {
+              "median": 469,
+              "p95NearestRank": 586,
+              "min": 290,
+              "max": 586,
+              "n": 13
+            },
+            "postTwoRoundsPssKb": 417177,
+            "exact38RunEquivalence": true,
+            "reportSha256": "2cc6af71cb238563480898b1d7486beded56a4ebe5fde01b049fb6ec2ee84dbf"
+          },
+          {
+            "trial": "v6-baseline-order2",
+            "initMs": 100,
+            "firstRequestMs": 614,
+            "warmRealOcrMs": {
+              "median": 453,
+              "p95NearestRank": 596,
+              "min": 294,
+              "max": 596,
+              "n": 13
+            },
+            "postTwoRoundsPssKb": 423118,
+            "exact38RunEquivalence": true,
+            "reportSha256": "25ee01af4d0cca561e9d50d60d4f61ee28d8b2ee1590d42b21c91ca0029081e3"
+          }
+        ],
+        "sixRoundRequests": 114,
+        "sixRoundOutputChanges": 0
+      },
+      {
+        "configuration": "v6-noarena",
+        "timingTrials": [
+          {
+            "trial": "v6-noarena-normal",
+            "initMs": 102,
+            "firstRequestMs": 1013,
+            "warmRealOcrMs": {
+              "median": 578,
+              "p95NearestRank": 728,
+              "min": 409,
+              "max": 728,
+              "n": 13
+            },
+            "postTwoRoundsPssKb": 96153,
+            "exact38RunEquivalence": true,
+            "reportSha256": "c0f6ae2105102cbedbd40a25d21854df304ae2bc8dcff54f2830189e198e63c4"
+          },
+          {
+            "trial": "v6-noarena-order2",
+            "initMs": 109,
+            "firstRequestMs": 996,
+            "warmRealOcrMs": {
+              "median": 586,
+              "p95NearestRank": 713,
+              "min": 425,
+              "max": 713,
+              "n": 13
+            },
+            "postTwoRoundsPssKb": 95999,
+            "exact38RunEquivalence": true,
+            "reportSha256": "4ace88521d176533908d62995ab738165b335738df7e4aaafc1fc844573465dc"
+          }
+        ],
+        "sixRoundRequests": 114,
+        "sixRoundOutputChanges": 0
+      },
+      {
+        "configuration": "mlkit",
+        "timingTrials": [
+          {
+            "trial": "mlkit-idle-normal",
+            "initMs": 9,
+            "firstRequestMs": 1224,
+            "warmRealOcrMs": {
+              "median": 1154,
+              "p95NearestRank": 2171,
+              "min": 397,
+              "max": 2171,
+              "n": 13
+            },
+            "postTwoRoundsPssKb": 82984,
+            "exact38RunEquivalence": true,
+            "reportSha256": "05de516b4a2105e2b6c843ecfcc525e0022f3b8b207249e90ff061a9ced4be38"
+          },
+          {
+            "trial": "mlkit-order2",
+            "initMs": 5,
+            "firstRequestMs": 1253,
+            "warmRealOcrMs": {
+              "median": 1161,
+              "p95NearestRank": 2221,
+              "min": 402,
+              "max": 2221,
+              "n": 13
+            },
+            "postTwoRoundsPssKb": 83931,
+            "exact38RunEquivalence": true,
+            "reportSha256": "7861f6f9652dcbb352a8d75d909395e955688966a2f43c511ff1931accad2d47"
+          }
+        ],
+        "sixRoundRequests": 114,
+        "sixRoundOutputChanges": 0
+      }
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+import groovy.json.JsonOutput
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.maven.MavenModule
+import org.gradle.maven.MavenPomArtifact
+
+// Read-only inventory of the configuration actually consumed by the release APK.
+gradle.projectsEvaluated {
+    def target = gradle.rootProject.project(':app')
+    target.tasks.register('auditReleaseRuntime') {
+        doLast {
+            def configuration = target.configurations.getByName('releaseRuntimeClasspath')
+            def resolved = configuration.incoming.resolutionResult
+            def ids = resolved.allComponents.collect { it.id }.findAll { it instanceof ModuleComponentIdentifier }
+            def query = target.dependencies.createArtifactResolutionQuery().forComponents(ids)
+                .withArtifacts(MavenModule, MavenPomArtifact).execute()
+            def poms = [:]
+            query.resolvedComponents.each { component ->
+                poms[component.id.displayName] = component.getArtifacts(MavenPomArtifact).collect { artifact ->
+                    artifact instanceof org.gradle.api.artifacts.result.ResolvedArtifactResult ?
+                        [file: artifact.file.absolutePath] : [error: artifact.failure.message]
+                }
+            }
+            def artifacts = configuration.resolvedConfiguration.resolvedArtifacts.collect { artifact ->
+                def coordinate = artifact.moduleVersion.id.toString()
+                [coordinate: coordinate, type: artifact.type, file: artifact.file.absolutePath,
+                 project: artifact.id.componentIdentifier instanceof org.gradle.api.artifacts.component.ProjectComponentIdentifier,
+                 poms: poms[coordinate] ?: []]
+            }.sort { it.coordinate }
+            def output = new File(target.rootProject.projectDir, '.tools/source-audit/runtime.json')
+            output.parentFile.mkdirs()
+            output.text = JsonOutput.prettyPrint(JsonOutput.toJson([
+                configuration: configuration.name, artifacts: artifacts,
+                pomFailures: query.components.findAll { it instanceof org.gradle.api.artifacts.result.UnresolvedComponentResult }
+                    .collect { [id: it.id.displayName, error: it.failure.message] }
+            ]))
+            println "Runtime inventory: ${artifacts.size()} artifacts -> ${output}"
+        }
+    }
+}

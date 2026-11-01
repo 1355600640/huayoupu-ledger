@@ -1,0 +1,59 @@
+# 参与贡献
+
+提交代码前请阅读 [README](README.md)、[NOTICE](NOTICE.md) 与 [LICENSE](LICENSE)。有意提交供项目采用的原创贡献按 GPL-3.0-only 提供；第三方文件保留原始许可、来源及修改说明。不要提交无权公开的内容。
+
+## 开发流程
+
+1. 按 README 准备固定 SDK、模型和原生 AAR，再创建主题明确的分支。
+2. 保持数据库升级、备份兼容和权限边界；行为变化应在 PR 中说明。
+3. 运行受影响的测试。仅使用合成数据，禁止提交真实交易、截图、密钥或未脱敏诊断。
+4. 说明问题、修改后的行为、验证命令和未覆盖范围；界面变化提供同尺寸、同状态的改前 / 改后截图。
+
+## 代码归属
+
+- `app/src/main/java/net/ankio/ledger/capture/`：权限、页面采集、摇动监听和识别队列。
+- `app/src/main/java/net/ankio/ledger/ocr/`：本地识别入口、模型适配、识别会话与商户图标处理。
+- `app/src/main/java/net/ankio/ledger/data/`：账本存储、查询、备份恢复和导入导出。
+- `app/src/main/java/net/ankio/ledger/ui/` 与 `app/src/main/assets/web/`：Android 窗口、WebView 桥接和界面。
+- `core/src/main/kotlin/net/ankio/ledger/core/`：不依赖 Android 的金额、解析、页面判定与去重规则。
+
+只有一个内置 OCR 实现，统一使用主源码目录。纯业务规则放入 `core`；采集、识别与持久化各自负责自己的边界，不再添加远程 AI 或单应用的转发包装层。数据库、备份和系统服务标识的兼容需要独立评估。
+
+## 检查命令
+
+```sh
+python3 scripts/check-public-source.py
+python3 scripts/prepare-ledger-build.py
+bash ./gradlew -PledgerPython=python3 :core:test :app:testDebugUnitTest :app:lintDebug
+```
+
+浏览器回归使用锁定的开发依赖：
+
+```sh
+npm ci --prefix tools/ui-checks --ignore-scripts --no-audit --no-fund
+npx --prefix tools/ui-checks playwright install chromium
+PLAYWRIGHT_MODULE="$PWD/tools/ui-checks/node_modules/playwright" node scripts/check-record-motion.cjs
+PLAYWRIGHT_MODULE="$PWD/tools/ui-checks/node_modules/playwright" node scripts/check-tab-navigation.cjs
+PLAYWRIGHT_MODULE="$PWD/tools/ui-checks/node_modules/playwright" node scripts/check-ledger-optimization.cjs
+PLAYWRIGHT_MODULE="$PWD/tools/ui-checks/node_modules/playwright" node scripts/check-ledger-search.cjs
+```
+
+Windows 使用 `gradlew.bat`，通过 `$env:PLAYWRIGHT_MODULE` 设置模块路径。新依赖须说明用途、许可和包体影响；原生库或模型更新须同步锁文件、通知、复现步骤与回归结果。
+
+## 支付自动识别回归检查点
+
+微信 / 支付宝适配、窗口读取、截图队列或去重变更，应按影响范围验证以下行为，并在 PR 中说明实际测试的应用版本、系统、设备及未覆盖项：
+
+- **触发与时序**：首次进入成功页，无需退出重进或打开慧铭；处理中到来的新事件可继续检查，迟到的节点响应须重新确认当前窗口。截图成功后离开页面仍能完成本地识别；截图前目标改变须停止采集。
+- **可读性与金额**：覆盖可见文本、内容描述、分组和深层节点；区分实付、原价与优惠券 / 奖励。只有营销金额或多个真实金额冲突时应拒绝自动识别。
+- **隐私边界**：空树、密码 / 验证 / 可编辑控件、遍历被截断及未知窗口不得请求截图；摇一摇也不能绕过敏感页面检查。历史详情不作为即时付款自动采集。
+- **跨前后台去重**：同一成功页在切后台返回、窗口重建、服务重连后仍只入账一次；新付款流程中的第二笔同金额交易可以入账。微信、支付宝分别验证，并检查交易号优先和无交易号两条路径。
+- **权限与运行状态**：自动识别无需开启摇一摇，不依赖通知、悬浮窗授权或额外前台服务；电池优化撤销后刷新，自启动和任务加锁的人工确认可重置、重开，不将人工记录写成实时系统授权。
+
+对应入口：核心规则 [PaymentPageDetectorTest](core/src/test/kotlin/net/ankio/ledger/core/PaymentPageDetectorTest.kt)，Android 集成 [WechatAutoPaymentTest](app/src/androidTest/java/net/ankio/ledger/WechatAutoPaymentTest.kt)（含支付宝场景）、[PaymentVisitsTest](app/src/androidTest/java/net/ankio/ledger/PaymentVisitsTest.kt)、[PaymentRecognitionQueueTest](app/src/androidTest/java/net/ankio/ledger/PaymentRecognitionQueueTest.kt)、[BackgroundSettingsSyncTest](app/src/androidTest/java/net/ankio/ledger/BackgroundSettingsSyncTest.kt) 与 [PermissionTrimTest](app/src/androidTest/java/net/ankio/ledger/PermissionTrimTest.kt)。涉及合成支付应用的集成用例需先准备其测试夹具，不能在装有真实微信或支付宝的个人设备上用同包名夹具覆盖安装。
+
+合成页面与模拟器用例用于验证链路和边界，不代替真实付款应用的兼容性、功耗或性能测试；记录耗时时应区分节点读取、截图、OCR、落库与提示，不把历史单引擎 OCR 耗时当作完整无感记账延迟。当前 CI 的具体必跑范围以 [Android workflow](.github/workflows/android.yml) 为准。
+
+## Issue 与 PR
+
+缺陷报告需提供应用版本、Android / 设备型号、最少复现步骤、预期与实际结果。识别问题使用合成或完全脱敏的图片，不把单一设备验证写成所有机型兼容。安全问题遵循 [SECURITY.md](SECURITY.md)。

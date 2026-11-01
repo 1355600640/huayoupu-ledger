@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+ <head>
+  <meta content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'" http-equiv="Content-Security-Policy"/>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   慧铭记账
+  </title>
+  <link href="vendor/css/all.min.css" rel="stylesheet"/>
+  <link href="v21.css" rel="stylesheet"/>
+  <link href="app.css" rel="stylesheet"/>
+  <link href="permission.css" rel="stylesheet"/>
+  <link href="settings-v30.css" rel="stylesheet"/>
+ </head>
+ <body class="native-app">
+  <main class="workspace">
+   <section aria-label="账本" class="screen app screen-ledger mobile-active" id="ledger">
+    <header class="v21-header">
+     <div class="ledger-title">
+      <h1>
+       首页账本
+      </h1>
+      <div class="subtitle">
+       记下每一笔，让生活更清晰
+      </div>
+     </div>
+     <div class="header-actions">
+      <button aria-label="搜索账单" aria-expanded="false" aria-controls="ledger-search-form" class="icon-btn" id="search-toggle" type="button">
+       <i aria-hidden="true" class="fa-solid fa-magnifying-glass">
+       </i>
+      </button>
+     </div>
+     <form class="search-box" id="ledger-search-form" role="search" hidden>
+      <div class="search-field">
+       <i aria-hidden="true" class="fa-solid fa-magnifying-glass"></i>
+       <input aria-label="搜索账单" id="ledger-search" placeholder="搜索商户、分类或备注" type="search" maxlength="200" enterkeyhint="search" autocomplete="off"/>
+       <button id="search-clear" aria-label="清空搜索" type="button" hidden><i aria-hidden="true" class="fa-solid fa-xmark"></i></button>
+      </div>
+      <button id="search-cancel" type="button">取消</button>
+     </form>
+    </header>
+    <div class="home-month">
+     <button aria-label="选择账本月份" class="month" id="month">
+      <h1>
+      </h1>
+      <i aria-hidden="true" class="fa-solid fa-chevron-down">
+      </i>
+     </button>
+     <nav aria-label="收支筛选" class="filter">
+      <button class="active" data-filter="expense">
+       支出
+      </button>
+      <button data-filter="income">
+       收入
+      </button>
+     </nav>
+    </div>
+    <section class="summary balance">
+     <div>
+      <div class="summary-label balance-title">
+       本月支出
+      </div>
+      <div class="summary-amount balance-number">
+      </div>
+      <div class="small" id="home-count">
+       共 0 笔消费
+      </div>
+     </div>
+     <button aria-label="查看每日收支明细" class="summary-trend" onclick="showTrendDetails()">
+      <div class="spark-bars" id="home-bars">
+      </div>
+      <div class="trend" id="home-change">
+      </div>
+     </button>
+    </section>
+    <div class="chart sr-only">
+     <div class="plot">
+      <svg preserveaspectratio="none" viewbox="0 0 250 60">
+       <defs>
+        <lineargradient id="fill" x1="0" x2="0" y1="0" y2="1">
+         <stop stop-color="#9aedd2" stop-opacity=".5">
+         </stop>
+         <stop offset="1" stop-color="#e5fbf5" stop-opacity="0">
+         </stop>
+        </lineargradient>
+       </defs>
+       <path fill="url(#fill)">
+       </path>
+       <path fill="none" stroke="#279e80" stroke-width="1.3">
+       </path>
+       <g fill="#e6fff5" stroke="#279e80">
+       </g>
+      </svg>
+     </div>
+    </div>
+    <div class="totals" hidden="">
+    </div>
+    <div id="entries">
+    </div>
+    <nav aria-label="主导航" class="bottom-nav">
+     <button aria-current="page" aria-label="首页" class="nav-item active" onclick="go('ledger')">
+      <i aria-hidden="true" class="fa-solid fa-house">
+      </i>
+      <span>
+       首页
+      </span>
+     </button>
+     <button aria-label="统计" class="nav-item" onclick="go('stats')">
+      <i aria-hidden="true" class="fa-solid fa-chart-simple">
+      </i>
+      <span>
+       统计
+      </span>
+     </button>
+     <button aria-label="添加记账" class="nav-item" onclick="beginManual()">
+      <span class="round-add nav-add">
+       <i aria-hidden="true" class="fa-solid fa-plus">
+       </i>
+      </span>
+     </button>
+     <button aria-label="资产" class="nav-item" onclick="go('assets')">
+      <i aria-hidden="true" class="fa-solid fa-wallet">
+      </i>
+      <span>
+       资产
+      </span>
+     </button>
+     <button aria-label="我的" class="nav-item" onclick="go('settings')">
+      <i aria-hidden="true" class="fa-solid fa-user">
+      </i>
+      <span>
+       我的
+      </span>
+     </button>
+    </nav>
+   </section>
+   <section aria-label="截图智能导入" class="screen screen-import" id="import">
+    <header class="page-title">
+     <button aria-label="返回" class="back" onclick="cancelEditor()">
+      <i class="fa-solid fa-arrow-left">
+      </i>
+     </button>
+     <h1>
+      截图智能导入
+     </h1>
+    </header>
+    <p class="subtitle">
+     主动选择支付截图，交给 AI 识别后本地记账
+    </p>
+    <section id="capture-gallery" class="capture-gallery" aria-label="原始截图" hidden=""></section>
+    <div aria-label="选择支付截图" class="scanner" onclick="viewOrPickImage()" role="button" tabindex="0">
+     <img alt="本笔账单的识别截图" hidden="" id="capture-preview"/>
+     <span class="capture-attachment-copy"><b>原始截图</b><small>点击查看大图</small></span><i class="fa-solid fa-expand capture-expand" aria-hidden="true"></i>
+     <span class="corner tl">
+     </span>
+     <span class="corner tr">
+     </span>
+     <span class="corner bl">
+     </span>
+     <span class="corner br">
+     </span>
+     <div class="scan-line">
+     </div>
+     <span class="scan-placeholder">
+      <i aria-hidden="true" class="fa-regular fa-image">
+      </i>
+      <b>
+       选择单笔账单截图
+      </b>
+      <small>
+       AI 识别成功自动入账
+      </small>
+     </span>
+    </div>
+    <div class="scanning" role="status">
+     点击上方选择支付截图，或手动填写
+    </div>
+    <div class="dots">
+     <span>
+     </span>
+     <span>
+     </span>
+     <span>
+     </span>
+    </div>
+    <form class="record-form" id="import-form" novalidate="">
+     <div class="confirm-card">
+      <div class="card-heading">
+       <span id="editor-title">
+        待完成记账信息
+       </span>
+       <span class="pending">
+        待确认
+       </span>
+      </div>
+      <div class="record-identity">
+      <div class="record-hero" hidden=""></div>
+      <div class="form-row merchant-row">
+       <i class="fa-solid fa-store">
+       </i>
+       <input aria-label="商户" id="merchant" maxlength="120" placeholder="商户名称"/>
+      </div>
+      </div>
+      <input data-value="EXPENSE" id="direction" type="hidden"/>
+      <span hidden="" id="source-label">
+      </span>
+      <div class="form-row edit amount-row">
+       <label class="sr-only" for="amount">金额</label>
+       <div class="amount-field">
+        <span id="amount-sign">¥ -</span>
+        <input id="amount" min="0.01" placeholder="请输入金额" required="" step="0.01" type="number"/>
+       </div>
+      </div>
+      <div class="record-chips">
+       <button aria-label="修改分类与收支方向" id="category" type="button">餐饮</button>
+       <button aria-label="修改交易时间" id="time-label" type="button"></button>
+       <input aria-label="交易时间" id="occurred-at" type="hidden"/>
+      </div>
+      <p id="refund-summary" class="refund-summary" hidden=""></p>
+      <div class="form-row edit note-row">
+       <i class="fa-regular fa-address-book">
+       </i>
+       <label for="note">
+        备注
+       </label>
+       <div class="note-field">
+        <input id="note" maxlength="500" placeholder="添加备注（可选）"/>
+       </div>
+      </div>
+     </div>
+     <p class="review-reason" hidden="" id="review-reason">
+     </p>
+     <button id="refund-match" class="refund-match" type="button" hidden="">选择原账单并更新退款</button>
+     <section class="standard-original" hidden="" id="original-message">
+      <b>
+       识别原文
+      </b>
+      <p>
+      </p>
+     </section>
+     <div class="editor-tools">
+      <button hidden="" id="raw-text-button" type="button">
+       识别原文
+      </button>
+     </div>
+     <div class="actions">
+      <button hidden="" id="delete-record" class="delete-action" type="button">删除账单</button>
+      <button class="primary" type="submit">
+       完成记账
+      </button>
+     </div>
+    </form>
+   </section>
+   <section aria-label="我的" class="screen app screen-settings" id="settings">
+    <header class="v21-header settings-header">
+     <div><h1>我的</h1><div class="subtitle">慧铭记账 · 把日子记在一起</div></div>
+     <button id="settings-help" onclick="settingsHelp()" aria-label="查看记账使用说明"><i class="fa-regular fa-circle-question" aria-hidden="true"></i></button>
+    </header>
+    <section class="card payment-settings"><h2>支付自动识别</h2><p>支付成功后，自动记录支出</p><div class="payment-apps"><div class="payment-app"><span class="payment-logo wechat"><svg viewBox="0 0 32 32" aria-hidden="true"><ellipse cx="13" cy="13" rx="10" ry="8" fill="white"></ellipse><path d="M6 18L5 23L11 20" fill="white"></path><ellipse cx="22" cy="21" rx="8" ry="6.5" fill="#c8f5d0"></ellipse><path d="M25 25L29 28L28 23" fill="#c8f5d0"></path><circle cx="9" cy="11" r="1" fill="#28ab50"></circle><circle cx="16" cy="11" r="1" fill="#28ab50"></circle><circle cx="19" cy="20" r="1" fill="#28ab50"></circle><circle cx="25" cy="20" r="1" fill="#28ab50"></circle></svg></span><span>微信</span><button class="switch off" role="switch" aria-checked="false" aria-label="微信支付自动识别" data-payment-app="com.tencent.mm"></button></div><div class="payment-app"><span class="payment-logo payment-alipay">支</span><span>支付宝</span><button class="switch off" role="switch" aria-checked="false" aria-label="支付宝支付自动识别" data-payment-app="com.eg.android.AlipayGphone"></button></div></div><p class="payment-note" id="automatic-status-label" role="status">ⓘ 首次开启，将引导设置模型与权限</p></section>
+    <section class="shake">
+     <svg aria-label="摇动手机识别消费" class="shake-illustration" fill="none" role="img" viewbox="0 0 150 125">
+      <path d="M94 10C119 12 133 31 132 54" stroke="#dce8ff" stroke-linecap="round" stroke-width="5">
+      </path>
+      <path d="M27 34C18 44 16 55 19 65M35 41C29 48 28 55 30 61M122 65C123 76 119 86 112 92M112 65C113 72 110 79 106 83" stroke="#5b94ff" stroke-linecap="round" stroke-width="5">
+      </path>
+      <g transform="rotate(16 76 61)">
+       <rect fill="#455965" height="88" rx="11" width="49" x="51" y="20">
+       </rect>
+       <rect fill="#f5faff" height="73" rx="5" width="37" x="57" y="27">
+       </rect>
+       <path d="M66 27H85L82 31H70Z" fill="#455965">
+       </path>
+      </g>
+      <path d="M136 17L139 23L144 25L139 27L136 33L134 27L129 25L134 23Z" fill="#b6ceff">
+      </path>
+      <path d="M24 96L27 101L31 103L27 105L24 110L22 105L18 103L22 101Z" fill="#c9e0ff">
+      </path>
+     </svg>
+     <h2>
+      摇一摇识别
+      <button aria-checked="false" aria-label="摇一摇记账" class="switch" data-channel="ocr" role="switch">
+      </button>
+     </h2>
+     <p>
+      没有自动记录？打开单笔账单详情
+      <br/>
+      摇动手机，AI 识别消费信息
+     </p>
+     <div class="steps">
+      <div class="step">
+       <b>
+        1
+       </b>
+       打开账单详情
+       <br/>
+       摇一摇手机
+      </div>
+      <div class="step">
+       <b>
+        2
+       </b>
+       AI 自动解析
+       <br/>
+       金额与商家
+      </div>
+      <div class="step">
+       <b>
+        3
+       </b>
+       识别成功入账
+       <br/>
+       随时编辑删除
+      </div>
+     </div>
+     <button aria-label="摇一摇记账状态" class="shake-runtime channel-copy" data-channel-info="ocr">
+      <span class="permission">
+      </span>
+      <span class="chevron">
+       ›
+      </span>
+     </button>
+    </section>
+    <section class="card account-preferences" aria-label="账户与偏好">
+     <button id="backup"><i aria-hidden="true" class="fa-solid fa-folder-open"></i><b>账单与备份</b><span class="chevron">›</span></button>
+     <button class="privacy-banner" onclick="privacy()"><i aria-hidden="true" class="fa-solid fa-shield-halved"></i><b>数据与隐私</b><span class="chevron">›</span></button>
+    </section>
+    <button class="about-app" onclick="about()">关于慧铭记账</button>
+    <nav aria-label="主导航" class="bottom-nav">
+     <button aria-label="首页" class="nav-item" onclick="go('ledger')">
+      <i aria-hidden="true" class="fa-solid fa-house">
+      </i>
+      <span>
+       首页
+      </span>
+     </button>
+     <button aria-label="统计" class="nav-item" onclick="go('stats')">
+      <i aria-hidden="true" class="fa-solid fa-chart-simple">
+      </i>
+      <span>
+       统计
+      </span>
+     </button>
+     <button aria-label="添加记账" class="nav-item" onclick="beginManual()">
+      <span class="round-add nav-add">
+       <i aria-hidden="true" class="fa-solid fa-plus">
+       </i>
+      </span>
+     </button>
+     <button aria-label="资产" class="nav-item" onclick="go('assets')">
+      <i aria-hidden="true" class="fa-solid fa-wallet">
+      </i>
+      <span>
+       资产
+      </span>
+     </button>
+     <button aria-current="page" aria-label="我的" class="nav-item active" onclick="go('settings')">
+      <i aria-hidden="true" class="fa-solid fa-user">
+      </i>
+      <span>
+       我的
+      </span>
+     </button>
+    </nav>
+   </section>
+   <section aria-label="手动记账" class="screen app screen-manual" id="manual">
+    <div class="entry-top">
+     <button aria-label="返回" class="back" onclick="go('ledger')">
+      <i aria-hidden="true" class="fa-solid fa-chevron-left">
+      </i>
+     </button>
+     <div class="entry-tabs segmented" id="manual-type">
+      <button class="active" data-type="expense">
+       支出
+      </button>
+      <button data-type="income">
+       收入
+      </button>
+     </div>
+     <button aria-label="管理分类" id="manage-category" type="button">
+      <i aria-hidden="true" class="fa-solid fa-ellipsis">
+      </i>
+     </button>
+    </div>
+    <form class="manual-body" id="manual-form">
+     <section class="entry-amount manual-amount">
+      <div class="entry-number">
+       <span>
+        ¥
+       </span>
+       <input aria-label="金额" id="manual-amount" inputmode="decimal" maxlength="14" placeholder="0.00" type="text"/>
+       <button aria-label="清空金额" onclick="clearManualAmount()" type="button">
+        ×
+       </button>
+      </div>
+      <label class="entry-note manual-note">
+       <input aria-label="备注" id="manual-note" maxlength="500" placeholder="添加备注（可选）"/>
+       <span id="manual-note-count">
+        0/500
+       </span>
+      </label>
+     </section>
+     <section class="entry-import">
+      <button aria-label="导入支付截图" onclick="newDraft();go('import');pickImage()" type="button">
+       <i aria-hidden="true" class="fa-solid fa-image">
+       </i>
+      </button>
+      <div>
+       <b>
+        AI 智能识别：导入账单截图
+       </b>
+       <small>
+        选择单笔账单，识别后核对入账
+       </small>
+      </div>
+      <span class="chevron">
+       ›
+      </span>
+     </section>
+     <div class="entry-categories category-grid" id="category-grid">
+     </div>
+     <div aria-label="金额数字键盘" class="entry-keyboard">
+      <button aria-label="1" class="" onclick="manualKey('1')" type="button">
+       1
+      </button>
+      <button aria-label="2" class="" onclick="manualKey('2')" type="button">
+       2
+      </button>
+      <button aria-label="3" class="" onclick="manualKey('3')" type="button">
+       3
+      </button>
+      <button aria-label="删除一位" class="" onclick="manualKey('backspace')" type="button">
+       <i aria-hidden="true" class="fa-solid fa-delete-left">
+       </i>
+      </button>
+      <button aria-label="4" class="" onclick="manualKey('4')" type="button">
+       4
+      </button>
+      <button aria-label="5" class="" onclick="manualKey('5')" type="button">
+       5
+      </button>
+      <button aria-label="6" class="" onclick="manualKey('6')" type="button">
+       6
+      </button>
+      <button aria-label="." class="" onclick="manualKey('.')" type="button">
+       .
+      </button>
+      <button aria-label="7" class="" onclick="manualKey('7')" type="button">
+       7
+      </button>
+      <button aria-label="8" class="" onclick="manualKey('8')" type="button">
+       8
+      </button>
+      <button aria-label="9" class="" onclick="manualKey('9')" type="button">
+       9
+      </button>
+      <button aria-label="保存" class="entry-save save-button" type="submit">
+       保存
+      </button>
+      <button aria-label="0" class="entry-zero" onclick="manualKey('0')" type="button">
+       0
+      </button>
+      <button aria-label="00" class="entry-zero" onclick="manualKey('00')" type="button">
+       00
+      </button>
+     </div>
+    </form>
+   </section>
+   <section aria-label="统计" class="screen app screen-stats" id="stats">
+    <header class="v21-header">
+     <div>
+      <h1>
+       统计分析
+      </h1>
+      <div class="subtitle">
+       用数据看见更好的自己
+      </div>
+     </div>
+     <div class="header-actions">
+      <button aria-label="选择统计月份" class="month" onclick="chooseStatsMonth()">
+       <span id="stats-month">
+       </span>
+       <i aria-hidden="true" class="fa-solid fa-chevron-down">
+       </i>
+      </button>
+     </div>
+    </header>
+    <div class="segmented" id="stats-type">
+     <button class="active" data-type="expense">
+      支出
+     </button>
+     <button data-type="income">
+      收入
+     </button>
+     <button data-type="all">
+      全部
+     </button>
+    </div>
+    <section class="card analysis-card">
+     <div class="muted" id="analysis-label">
+      本月支出总计
+     </div>
+     <div class="analysis-total" id="analysis-total">
+      ¥ 0.00
+     </div>
+     <div class="change" id="stats-change">
+     </div>
+     <div class="chart-area stats-chart">
+      <div class="donut" id="donut">
+       <div class="donut-center">
+        <span id="stats-label">
+         总支出
+        </span>
+        <strong id="stats-total">
+         ¥ 0.00
+        </strong>
+        <small id="stats-count">
+         共 0 笔
+        </small>
+       </div>
+      </div>
+      <div class="legend" id="chart-labels">
+      </div>
+     </div>
+    </section>
+    <div class="category-heading ranking-heading">
+     <span>
+      分类明细
+     </span>
+     <div class="segmented" id="ranking-type">
+      <button class="active" data-type="expense">
+       支出
+      </button>
+      <button data-type="income">
+       收入
+      </button>
+     </div>
+    </div>
+    <div class="card categories ranking" id="ranking">
+    </div>
+    <nav aria-label="主导航" class="bottom-nav">
+     <button aria-label="首页" class="nav-item" onclick="go('ledger')">
+      <i aria-hidden="true" class="fa-solid fa-house">
+      </i>
+      <span>
+       首页
+      </span>
+     </button>
+     <button aria-current="page" aria-label="统计" class="nav-item active" onclick="go('stats')">
+      <i aria-hidden="true" class="fa-solid fa-chart-simple">
+      </i>
+      <span>
+       统计
+      </span>
+     </button>
+     <button aria-label="添加记账" class="nav-item" onclick="beginManual()">
+      <span class="round-add nav-add">
+       <i aria-hidden="true" class="fa-solid fa-plus">
+       </i>
+      </span>
+     </button>
+     <button aria-label="资产" class="nav-item" onclick="go('assets')">
+      <i aria-hidden="true" class="fa-solid fa-wallet">
+      </i>
+      <span>
+       资产
+      </span>
+     </button>
+     <button aria-label="我的" class="nav-item" onclick="go('settings')">
+      <i aria-hidden="true" class="fa-solid fa-user">
+      </i>
+      <span>
+       我的
+      </span>
+     </button>
+    </nav>
+   </section>
+   <section aria-label="资产" class="screen app screen-assets" id="assets">
+    <header class="v21-header">
+     <div>
+      <h1>
+       我的资产
+      </h1>
+      <div class="subtitle">
+       让每一份财富，更有安全感
+      </div>
+     </div>
+     <div class="header-actions">
+      <button aria-label="隐藏资产" class="icon-btn hide-assets" id="hide-assets">
+       <i aria-hidden="true" class="fa-solid fa-eye">
+       </i>
+      </button>
+      <button aria-label="添加账户" class="round-add" id="add-account">
+       +
+      </button>
+     </div>
+    </header>
+    <section class="asset-card">
+     <div class="asset-top">
+      <span>
+       总资产（净资产）
+      </span>
+      <button aria-label="净资产说明" class="muted" onclick="notify('净资产 = 总资产 − 总负债；余额由你手动维护')">
+       ⓘ
+      </button>
+     </div>
+     <div class="asset-total net-amount" id="net-amount">
+     </div>
+     <div class="asset-breakdown" id="asset-summary">
+     </div>
+    </section>
+    <div class="account-heading">
+     <span>
+      账户管理
+     </span>
+     <span id="account-count">
+     </span>
+    </div>
+    <p class="asset-maintenance">余额手动更新，与账本收支独立</p>
+    <div id="accounts">
+    </div>
+    <nav aria-label="主导航" class="bottom-nav">
+     <button aria-label="首页" class="nav-item" onclick="go('ledger')">
+      <i aria-hidden="true" class="fa-solid fa-house">
+      </i>
+      <span>
+       首页
+      </span>
+     </button>
+     <button aria-label="统计" class="nav-item" onclick="go('stats')">
+      <i aria-hidden="true" class="fa-solid fa-chart-simple">
+      </i>
+      <span>
+       统计
+      </span>
+     </button>
+     <button aria-label="添加记账" class="nav-item" onclick="beginManual()">
+      <span class="round-add nav-add">
+       <i aria-hidden="true" class="fa-solid fa-plus">
+       </i>
+      </span>
+     </button>
+     <button aria-current="page" aria-label="资产" class="nav-item active" onclick="go('assets')">
+      <i aria-hidden="true" class="fa-solid fa-wallet">
+      </i>
+      <span>
+       资产
+      </span>
+     </button>
+     <button aria-label="我的" class="nav-item" onclick="go('settings')">
+      <i aria-hidden="true" class="fa-solid fa-user">
+      </i>
+      <span>
+       我的
+      </span>
+     </button>
+    </nav>
+   </section>
+  </main>
+  <div hidden="" id="record-shade">
+  </div>
+  <section aria-label="账单详情" role="dialog" aria-modal="true" tabindex="-1" hidden="" id="record-panel">
+   <div aria-hidden="true" class="page-grip">
+   </div>
+   <div class="record-panel-content">
+   </div>
+  </section>
+  <dialog id="sheet">
+   <div class="sheet-heading">
+    <h2 id="sheet-title">
+    </h2>
+    <button aria-label="关闭" onclick="closeSheet()">
+     ×
+    </button>
+   </div>
+   <div id="sheet-content">
+   </div>
+  </dialog>
+  <dialog id="detailDialog" aria-labelledby="setup-title"><div id="detailContent"></div></dialog>
+  <div class="toast" role="status">
+  </div>
+  <div hidden id="manual-shade"></div>
+  <section hidden id="manual-panel" role="dialog" aria-modal="true" aria-label="手动记账" tabindex="-1"><div class="manual-panel-content"></div></section>
+  <script src="fluid-motion.js"></script>
+  <script src="panel-focus.js"></script>
+   <script src="app.js">
+  </script>
+  <script src="permission.js"></script>
+ </body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "name": "huiming-browser-regression-checks",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Development-only browser regressions; never bundled into the Android application.",
+  "engines": { "node": ">=20" },
+  "devDependencies": { "playwright": "1.58.2" }
+}
