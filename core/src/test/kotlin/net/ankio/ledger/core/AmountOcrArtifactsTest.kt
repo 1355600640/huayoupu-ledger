@@ -1,10 +1,13 @@
 package net.ankio.ledger.core
 
+import java.time.LocalDateTime
+import java.time.ZoneId
 import org.junit.Assert.*
 import org.junit.Test
 
 class AmountOcrArtifactsTest {
-    private val capturedAt = 1_792_386_000_000L
+    private val capturedAt = LocalDateTime.of(2026, 10, 19, 13, 0)
+        .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
     private fun parse(vararg text: String, origin: String = "com.xunmeng.pinduoduo") =
         LocalOcrBillParser.parse(text.map(::LocalOcrLine), 0, 0, capturedAt, origin = origin)
 
