@@ -79,30 +79,47 @@
 
 </details>
 
-<details>
-<summary>展开查看隐私、关于、诊断与许可页面</summary>
+## 技术实现
 
-| 数据与隐私 | 关于慧铭记账 | 调试与诊断 |
-| :---: | :---: | :---: |
-| <img src=".github/screenshots/ui-privacy.webp" width="250" alt="数据与隐私，Android 应用实际运行，示例数据" /> | <img src=".github/screenshots/ui-about.webp" width="250" alt="关于慧铭记账，Android 应用实际运行，示例数据" /> | <img src=".github/screenshots/ui-diagnostics.webp" width="250" alt="调试与诊断，Android 应用实际运行，示例数据" /> |
+### 为什么选择 PP-OCRv6 Tiny？
 
-| 许可与第三方声明 | 项目开源协议 | 第三方依赖声明 |
-| :---: | :---: | :---: |
-| <img src=".github/screenshots/ui-licenses.webp" width="250" alt="许可与第三方声明，Android 应用实际运行，示例数据" /> | <img src=".github/screenshots/ui-project-license.webp" width="250" alt="项目开源协议，Android 应用实际运行，示例数据" /> | <img src=".github/screenshots/ui-third-party.webp" width="250" alt="第三方依赖声明，Android 应用实际运行，示例数据" /> |
+支付账单识别更关心金额、订单号与退款状态，中文长文本跑分不能直接代表记账效果。我们用同一批 **19 张图片**（13 张授权真实截图、6 张合成边界图），在同一解析器下比较了 ML Kit Chinese、PP-OCRv5 mobile 与 PP-OCRv6 tiny。
 
-| 字体与图标声明 |   |   |
-| :---: | :---: | :---: |
-| <img src=".github/screenshots/ui-font-notices.webp" width="250" alt="字体与图标声明，Android 应用实际运行，示例数据" /> |   |   |
+V6 Tiny 的检测与识别权重合计约 **5.95 MiB**，V5 mobile 约 **20.37 MiB**。进一步制作独立单引擎研究包，比较实际体积和账单字段：
 
-</details>
+| 历史同图测试 | V6 Tiny 精简版 | ML Kit Chinese |
+| --- | ---: | ---: |
+| 真实支出最终金额正确 | 10/10 | 9/10 |
+| 最终订单号精确匹配 | 7/7 | 6/7 |
+| 暖态 OCR 中位数 | 464 ms | 1,140 ms |
+| ARM64 独立研究 APK | 20.44 MiB | 13.94 MiB |
 
-## 真实识别记录
+我们选择 V6 Tiny，是看重这批支付账单中的字段结果、响应速度与可裁剪的本地运行库，同时接受比 ML Kit 更大的包体。**耗时来自 API 30 x86_64 模拟器，包体来自 ARM64 研究包；样本较小，不代表真机完整记账延迟或普遍准确率。** 上表 V6 使用历史默认内存池，当前应用采用下述低保留内存策略。完整口径与原始摘要哈希见[选型数据](.github/benchmarks/ocr-selection.json)。
 
-以下为使用者提供的真机执行记录，隐私信息已打码。
+### 为什么还要针对 OCR 调优？
 
-| 微信转账识别 | 账本记录 | 退款账单详情 |
-| :---: | :---: | :---: |
-| <img src=".github/screenshots/real-wechat-transfer.webp" width="250" alt="真实微信转账记账结果，收款人已打码" /> | <img src=".github/screenshots/real-ledger.webp" width="250" alt="真实手机账本，展示自动记账与摇一摇来源" /> | <img src=".github/screenshots/real-refund-detail.webp" width="250" alt="真实退款详情：原付100元、已退67.23元、实付32.77元" /> |
+通用 OCR 输出的是文字和坐标，记账还要解决“哪个数字是实付、哪个时间是付款时间、退款如何计算”，并控制后台内存与安装体积。当前使用上游固定模型权重，做的是**工程与解析调优，未进行模型权重微调训练**。
+
+- **缩小运行库**：按 V6 模型生成算子配置、裁剪 ONNX Runtime 与 OpenCV 模块，结合单 ABI、R8 和资源裁剪；历史独立研究包从 53.48 MiB 降至 20.44 MiB，保留模型精度和中文词典。
+- **降低请求间内存保留**：关闭 CPU arena，串行执行解码、OCR 与图标裁剪，排队请求只保留压缩数据，每次结束释放会话和图片。历史换序测试的暖态中位耗时由约 453–469 ms 增至 578–586 ms，换取更低的请求结束后内存占用；这些不是当前应用峰值内存或完整延迟。
+- **按账单语义解析**：结合文字坐标区分实付、优惠、原付与已退，处理装饰符号、退款标签和发货时间干扰；金额有冲突时保留校验，避免猜数入账。
+- **同图提取商户图标**：利用商户文字与几何位置裁剪 Logo / 头像，生成 128 × 128 图标，在 PNG 与无损 WebP 中选择更小文件；无法可靠定位时使用默认图标。
+
+运行库来源、固定版本、构建方式与修改声明见[OCR 运行库说明](third_party/ocr-runtime/README.md)，详细测试方法见[OCR 调优与回归](.github/REFERENCE.md#ocr-选型调优与测试)。
+
+### 无障碍“破限”：让微信支付成功页可读
+
+部分微信支付成功页在普通无障碍服务下只返回空根节点，单纯补读取 flags 仍然无效。我们做过同一真机成功页的只读 **A→B→A** 对照：保持诊断逻辑、权限与 flags 相同，仅更换服务完整类名，普通入口的有效采样均为 **1 个空节点**，兼容入口的 8 次采样均读到 **32 个节点**及“支付成功”“完成”，换回后再次为空。
+
+当前使用沿用 `SelectToSpeakService` 完整类名的[兼容入口](app/src/main/java/com/google/android/accessibility/selecttospeak/SelectToSpeakService.kt)，内部继承慧铭自己的识别服务；系统中仍显示“慧铭记账 · 页面识别”，`isAccessibilityTool=false`。这项适配未引入 Google 代码或系统权限；微信内部判断机制并未公开，对照结果只证明已测环境中的类名差异有效。
+
+支付成功页到本地账本的流程为：
+
+1. **事件触发检查**：只检查用户开启的应用，合并窗口事件，读取可见文字与内容描述；有界重试处理页面刚切换、节点迟到和深层容器。
+2. **确认后取图**：识别明确成功状态和唯一有效金额，截图前重新核对窗口与支付身份。Android 14+ 使用指定窗口截图，旧系统采集后再次核对窗口。
+3. **离线识别入账**：本地 OCR 补足商户、时间和订单号，校验并去重；已取得的图片排队处理，离开成功页后仍可完成。
+
+密码、可编辑或不可读页面会跳过，系统安全窗口的截图限制仍然生效。无需 Root、Hook、短信或通知监听；覆盖范围随微信 / 支付宝版本及系统变化。节点恢复后仍要满足成功页检查，不能仅凭容器类名触发截图。实现与验证范围见[无障碍兼容说明](.github/REFERENCE.md#微信成功页的兼容入口与验证)。
 
 ## 开始使用
 
