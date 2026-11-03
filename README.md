@@ -134,3 +134,7 @@ V6 Tiny 的检测与识别权重合计约 **5.95 MiB**，V5 mobile 约 **20.37 M
 [使用说明与常见问题](.github/REFERENCE.md#常见问题) · [源码构建](.github/REFERENCE.md#从源码构建) · [参与贡献](CONTRIBUTING.md) · [安全反馈](SECURITY.md)
 
 项目采用 [GPL-3.0-only](LICENSE)；第三方组件及素材声明见 [NOTICE.md](NOTICE.md)。
+
+## 社区交流
+
+[LINUX DO](https://linux.do/) · 真诚、友善、团结、专业。欢迎佬友交流使用体验、反馈问题，一起改进慧铭记账。
