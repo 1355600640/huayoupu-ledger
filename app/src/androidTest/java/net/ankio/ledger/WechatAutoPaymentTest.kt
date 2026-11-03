@@ -164,6 +164,26 @@ class WechatAutoPaymentTest {
                     repeat(3) { returnToResult() }
                     assertEquals("Returning to the existing result must not upload it again",1,calls.get())
                     assertEquals(1,app.store.all().count { it.id !in before })
+                    // A resumed payment can be accompanied by home/activity events from
+                    // another window. Those events do not prove that the result was left.
+                    repeat(2) {
+                        val event=android.view.accessibility.AccessibilityEvent.obtain(android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED)
+                        event.packageName=packageName;event.className=homeActivity
+                        try { androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                            ScreenCaptureService.current!!.onAccessibilityEvent(event)
+                        } } finally { event.recycle() }
+                        SystemClock.sleep(2000)
+                        assertEquals("An unrelated home event must not create another payment",1,calls.get())
+                        assertEquals(1,app.store.all().count { it.id !in before })
+                    }
+                    val viewEvent=android.view.accessibility.AccessibilityEvent.obtain(android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED)
+                    viewEvent.packageName=packageName;viewEvent.className="$packageName.fixture.CustomActivity"
+                    try { InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                        val activityBeforeViewEvent=ScreenCaptureService.current!!.paymentDiagnostics().getString("lastActivity")
+                        ScreenCaptureService.current!!.onAccessibilityEvent(viewEvent)
+                        assertEquals("A custom View class cannot replace the last declared activity",activityBeforeViewEvent,
+                            ScreenCaptureService.current!!.paymentDiagnostics().getString("lastActivity"))
+                    } } finally { viewEvent.recycle() }
                     val factory=ScreenCaptureService.current!!.processorFactory
                     Settings.Secure.putString(resolver,"enabled_accessibility_services","")
                     Settings.Secure.putInt(resolver,"accessibility_enabled",0)

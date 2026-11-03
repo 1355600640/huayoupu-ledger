@@ -10,14 +10,20 @@ import net.ankio.ledger.core.PaymentPageDetector
 internal class PaymentVisits(context:Context,name:String="payment_visits") {
     private val preferences=context.getSharedPreferences(name,Context.MODE_PRIVATE)
 
-    @Synchronized fun activity(packageName:String,activity:String) {
-        if(!PaymentApps.supported(packageName))return
-        if(activity in setOf("com.alipay.mobile.quinox.LauncherActivity","com.eg.android.AlipayGphone.AlipayLogin") ||
-            (activity.endsWith("UI") || activity.endsWith("Activity")) &&
-            !PaymentPageDetector.eligibleActivity(packageName,activity))begin(packageName)
+    companion object {
+        fun isNavigation(packageName:String,activity:String)=PaymentApps.supported(packageName) &&
+            (activity in setOf("com.alipay.mobile.quinox.LauncherActivity","com.eg.android.AlipayGphone.AlipayLogin") ||
+                (activity.endsWith("UI") || activity.endsWith("Activity")) &&
+                !PaymentPageDetector.eligibleActivity(packageName,activity))
     }
 
     @Synchronized fun detect(page:PaymentPage):PaymentMatch? {
+        // Only the current, owner-verified page may end a visit. Raw activity
+        // events from other windows or an app-resume burst are not navigation.
+        if(isNavigation(page.packageName,page.activity)) {
+            begin(page.packageName)
+            return null
+        }
         val match=PaymentPageDetector.detect(page)
         if(match==null) {
             // Inputs are observed only as a flag; their values never enter this gate.

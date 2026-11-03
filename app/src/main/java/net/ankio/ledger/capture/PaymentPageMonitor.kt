@@ -73,12 +73,14 @@ internal class PaymentPageMonitor(private val service:ScreenCaptureService,priva
         if(!CapturePrivacy.manualPackageAllowed(pkg))return
         if(event.eventType==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             val name=event.className?.toString().orEmpty()
-            if(name.contains('.') && !name.startsWith("android.") && !name.startsWith("com.android.")) {
+            // Window-state events also come from custom Views. Only a declared
+            // activity can identify the page; a View class must not replace it.
+            if(name.contains('.') && !name.startsWith("android.") && !name.startsWith("com.android.") &&
+                runCatching { service.packageManager.getActivityInfo(android.content.ComponentName(pkg,name),0) }.isSuccess) {
                 lastActivity=name
                 if(activities.size>64) { activities.clear();packages.clear() }
                 activities[event.windowId]=name
                 packages[event.windowId]=pkg
-                visits.activity(pkg,name)
             }
         }
         if(!service.ledger.channels.autoAllowed(pkg))return
@@ -172,15 +174,24 @@ internal class PaymentPageMonitor(private val service:ScreenCaptureService,priva
                 detail.put("cachedPackage",pkg).put("cachedActivity",activity)
                 if(expectedWindow!=null && selected.id!=expectedWindow || expectedPackage!=null && pkg!=expectedPackage)return@readResult missing("target_changed")
                 if(automatic && !service.ledger.channels.autoAllowed(pkg))return@readResult missing("application_not_selected")
-                if(if(automatic) !PaymentPageDetector.eligibleActivity(pkg,activity) else !CapturePrivacy.manualPackageAllowed(pkg))return@readResult missing("activity_not_eligible")
+                if(!automatic && !CapturePrivacy.manualPackageAllowed(pkg))return@readResult missing("activity_not_eligible")
                 available.firstOrNull { it.id==selected.id }?.let { if(Build.VERSION.SDK_INT>=33)it.getRoot(0) else it.root }
             } finally { available.forEach { it.recycle() } }?:return@readResult missing("root_unavailable")
             val pkg=root.packageName?.toString().orEmpty()
             detail.put("rootPackage",pkg).put("rootWindow",root.windowId)
-            if(!CapturePrivacy.manualPackageAllowed(pkg) || expectedPackage!=null && pkg!=expectedPackage || automatic && !service.ledger.channels.autoAllowed(pkg)) { root.recycle();return@readResult missing("root_package_mismatch") }
+            if(root.windowId!=detail.optInt("selectedWindow",-1) ||
+                !CapturePrivacy.manualPackageAllowed(pkg) || expectedPackage!=null && pkg!=expectedPackage ||
+                automatic && (!service.ledger.channels.autoAllowed(pkg) || pkg!=detail.optString("cachedPackage"))) { root.recycle();return@readResult missing("root_package_mismatch") }
             val window=root.windowId
             val activity=activities[window].orEmpty()
-            if(automatic && !PaymentPageDetector.eligibleActivity(pkg,activity)) { root.recycle();return@readResult missing("root_activity_not_eligible") }
+            if(automatic && (PaymentVisits.isNavigation(pkg,activity) || !PaymentPageDetector.eligibleActivity(pkg,activity))) {
+                // Navigation is evidence only for the selected, owner-verified
+                // window. Return metadata without reading ordinary app content.
+                // PaymentVisits consumes it after the probe returns on time;
+                // a late Binder result must not mutate the payment identity.
+                root.recycle();probeDetails=JSONObject(detail.toString()).put("stage","navigation_metadata")
+                return@readResult PaymentPage(pkg,window,activity,emptyList())
+            }
             val queue=java.util.ArrayDeque<Pair<AccessibilityNodeInfo,Int>>()
             queue.add(root to 0)
             val texts=mutableListOf<String>();var editable=false;var count=0;var chars=0;var clipped=false

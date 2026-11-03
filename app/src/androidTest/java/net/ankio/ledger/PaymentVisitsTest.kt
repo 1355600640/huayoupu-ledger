@@ -15,6 +15,10 @@ class PaymentVisitsTest {
         listOf("支付成功","合成测试商店","¥$amount","返回商家")+
             (transaction?.let { listOf("交易单号",it) }?:emptyList()))
 
+    private fun navigation(visits:PaymentVisits,pkg:String,activity:String) {
+        assertNull(visits.detect(PaymentPage(pkg,99,activity,emptyList())))
+    }
+
     private fun withVisits(test:(PaymentVisits,()->PaymentVisits)->Unit) {
         val context=ApplicationProvider.getApplicationContext<LedgerApp>()
         val name="payment_visits_test_${java.util.UUID.randomUUID()}"
@@ -33,9 +37,9 @@ class PaymentVisitsTest {
 
     @Test fun externalAppsAndIncompleteReadsDoNotCreateAnotherPayment()=withVisits { visits,_ ->
         val first=visits.detect(page())!!
-        visits.activity("com.android.launcher3","com.android.launcher3.Launcher")
-        visits.activity("net.ankio.ledger","net.ankio.ledger.ui.MainActivity")
-        visits.activity(PaymentApps.WECHAT,page().activity)
+        navigation(visits,"com.android.launcher3","com.android.launcher3.Launcher")
+        navigation(visits,"net.ankio.ledger","net.ankio.ledger.ui.MainActivity")
+        navigation(visits,PaymentApps.WECHAT,page().activity)
         assertNull(visits.detect(page(72).copy(texts=emptyList())))
         assertNull(visits.detect(page(72).copy(texts=listOf("支付成功","返回商家"))))
         assertEquals(first.eventIdentity,visits.detect(page(72))!!.eventIdentity)
@@ -43,7 +47,7 @@ class PaymentVisitsTest {
 
     @Test fun navigationWithinWechatAllowsAnotherPaymentEvenInTheSameWindow()=withVisits { visits,reopen ->
         val first=visits.detect(page())!!
-        visits.activity(PaymentApps.WECHAT,"com.tencent.mm.ui.LauncherUI")
+        navigation(visits,PaymentApps.WECHAT,"com.tencent.mm.ui.LauncherUI")
         val second=reopen().detect(page())!!
         assertNotEquals(first.eventIdentity,second.eventIdentity)
         assertEquals(second.eventIdentity,reopen().detect(page(73))!!.eventIdentity)
@@ -60,7 +64,7 @@ class PaymentVisitsTest {
 
     @Test fun knownTransactionIdsRemainIndependentOfVisits()=withVisits { visits,_ ->
         val first=visits.detect(page(transaction="4200003240202610171234567890"))!!
-        visits.activity(PaymentApps.WECHAT,"com.tencent.mm.ui.LauncherUI")
+        navigation(visits,PaymentApps.WECHAT,"com.tencent.mm.ui.LauncherUI")
         assertEquals(first.eventIdentity,visits.detect(page(73,transaction=first.transactionId))!!.eventIdentity)
         assertNotEquals(first.eventIdentity,visits.detect(page(transaction="4200003240202610171234567891"))!!.eventIdentity)
     }
@@ -69,7 +73,7 @@ class PaymentVisitsTest {
         val result=page().copy(packageName=PaymentApps.ALIPAY,activity="com.alipay.fixture.PaymentResultActivity")
         val first=visits.detect(result)!!
         assertEquals(first.eventIdentity,reopen().detect(result.copy(windowId=73))!!.eventIdentity)
-        visits.activity(PaymentApps.ALIPAY,"com.alipay.mobile.quinox.LauncherActivity")
+        navigation(visits,PaymentApps.ALIPAY,"com.alipay.mobile.quinox.LauncherActivity")
         val second=reopen().detect(result.copy(windowId=74))!!
         assertNotEquals(first.eventIdentity,second.eventIdentity)
         assertEquals(second.eventIdentity,reopen().detect(result.copy(windowId=75))!!.eventIdentity)
@@ -80,7 +84,7 @@ class PaymentVisitsTest {
         val other=page().copy(packageName=PaymentApps.ALIPAY,activity="com.alipay.android.msp.ui.views.MspContainerActivity")
         assertNotEquals(first.eventIdentity,visits.detect(other)!!.eventIdentity)
         assertNotEquals(first.eventIdentity,visits.detect(page(amount="23.45"))!!.eventIdentity)
-        visits.activity(PaymentApps.ALIPAY,"com.alipay.mobile.MainActivity")
+        navigation(visits,PaymentApps.ALIPAY,"com.alipay.mobile.MainActivity")
         assertEquals(first.eventIdentity,visits.detect(page(75))!!.eventIdentity)
     }
 }
