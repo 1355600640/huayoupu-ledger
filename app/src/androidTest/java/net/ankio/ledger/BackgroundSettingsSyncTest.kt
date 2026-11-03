@@ -98,12 +98,14 @@ class BackgroundSettingsSyncTest {
         web.run("document.querySelector('[data-setup-action=\"view:task_lock\"]').click()")
         web.await("Boolean(document.querySelector('[data-setup-action=\"reset:task_lock\"]'))")
         web.run("setTimeout(()=>document.querySelector('#setup-primary').click(),0)")
+        // Global Recents is asynchronous. Wait until it really leaves the app, then
+        // return the existing task without queuing Back against the permission sheet.
+        waitFor { automation.rootInActiveWindow?.packageName?.toString()?.let { it!=app.packageName }==true }
+        automation.waitForIdle(250,5_000)
         screenshot(app,automation,"background-recents.png")
-        automation.performGlobalAction(1)
-        // Back from recents may leave the launcher foreground; resume the existing task.
         app.getSystemService(android.app.ActivityManager::class.java).appTasks.single().moveToFront()
-        scenario.moveToState(androidx.lifecycle.Lifecycle.State.RESUMED)
         web.ready()
+        web.await("window.LedgerSetup.isOpen() && Boolean(document.querySelector('[data-setup-action=\"reset:task_lock\"]'))")
         web.run("document.querySelector('[data-setup-action=\"reset:task_lock\"]').click()")
         waitFor { !app.getSharedPreferences("background_setup",0).getBoolean("task_lock",true) }
     }

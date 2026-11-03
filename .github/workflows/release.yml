@@ -1,0 +1,94 @@
+name: Publish Android APK
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing version tag, for example v0.5.84-v6'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.repository == 'AldenHe/huiming-ledger'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      actions: read
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+      EXPECTED_CERT_SHA256: 31b8d5ed67959c0bcce58772e20650104b8879a648af1c9c5a7007f5294bed80
+    steps:
+      - name: Validate version tag
+        run: '[[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]'
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: build-tools;35.0.0
+      - name: Require successful Android checks for this exact commit
+        run: |
+          set -euo pipefail
+          commit=$(git rev-parse HEAD)
+          test "$(git rev-parse "$RELEASE_TAG^{commit}")" = "$commit"
+          run_id=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow android.yml --commit "$commit" --branch main --event push --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+          test -n "$run_id" || { echo 'Push this commit to main and run Android checks before publishing.'; exit 1; }
+          gh run watch "$run_id" --repo "$GITHUB_REPOSITORY" --exit-status --interval 15
+          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name android-arm64 --dir release
+          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name checked-source --dir release
+          echo "RELEASE_COMMIT=$commit" >> "$GITHUB_ENV"
+      - name: Verify APK signature, checksums and provenance
+        working-directory: release
+        run: |
+          set -euo pipefail
+          sha256sum --check ./*.sha256
+          python - <<'PY'
+          import hashlib, json, os, pathlib, zipfile
+          metadata = json.loads(pathlib.Path('build-info.json').read_text())
+          assert metadata['commit'] == os.environ['RELEASE_COMMIT'], 'APK commit does not match the tag'
+          assert 'v' + metadata['version'] == os.environ['RELEASE_TAG'], 'Tag must match the app version'
+          assert metadata['package'] == 'net.ankio.ledger'
+          assert metadata['abi'] == 'arm64-v8a' and metadata['signed'] is True
+          apk, = pathlib.Path('.').glob('*.apk')
+          assert apk.name == metadata['filename'] and not apk.name.endswith('-unsigned.apk')
+          assert hashlib.sha256(apk.read_bytes()).hexdigest() == metadata['sha256']
+          with zipfile.ZipFile(apk) as archive:
+              abis = {name.split('/')[1] for name in archive.namelist() if name.startswith('lib/') and name.endswith('.so')}
+          assert abis == {'arm64-v8a'}, f'Unexpected native libraries: {abis}'
+          PY
+          apk=(./*.apk)
+          "$ANDROID_HOME/build-tools/35.0.0/zipalign" -c -P 16 4 "${apk[0]}"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs "${apk[0]}" | tee verified-signature.txt
+          grep -Fx "Signer #1 certificate SHA-256 digest: $EXPECTED_CERT_SHA256" verified-signature.txt
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "${apk[0]}" > apk-badging.txt
+          if grep -q 'application-debuggable' apk-badging.txt; then echo 'Refusing to publish a debuggable APK'; exit 1; fi
+      - name: Publish downloadable APK and matching source
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/release-notes.md" <<EOF
+          慧铭记账 ${RELEASE_TAG#v}
+
+          下载下方 **Huiming-Ledger-*-arm64-v8a.apk**，在 Android 11 或更高版本的 ARM64 手机上安装。
+
+          - APK 由 GitHub Actions 构建，并使用项目固定签名。
+          - 对应提交：$RELEASE_COMMIT；源码、浏览器、单元测试、lint 和 Android 模拟器回归均已通过。
+          - 同时提供 APK SHA-256 校验值、构建信息和对应的完整公开源码 ZIP。
+          - 从本地调试版切换时，若提示签名不一致，请先在应用内导出备份，再卸载旧版、安装并恢复备份。
+          EOF
+          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --latest --title "慧铭记账 ${RELEASE_TAG#v}" --notes-file "$RUNNER_TEMP/release-notes.md" release/*.apk release/*.sha256 release/Huiming-Ledger-source.zip release/build-info.json

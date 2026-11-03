@@ -128,9 +128,9 @@ Manifest 不声明 `READ_SMS` / `RECEIVE_SMS` / `POST_NOTIFICATIONS`，没有注
 
 ## 安装与快速开始
 
-需要 **Android 11 或更新版本**。当前 README 提供[源码构建方式](#从源码构建)，尚未配置公开 APK 下载链接。
+需要 **Android 11 或更新版本的 ARM64 手机**。在 [最新 Release](https://github.com/AldenHe/huiming-ledger/releases/latest) 下载 `Huiming-Ledger-*-arm64-v8a.apk`；同页提供 SHA-256 校验值和对应源码。也可[自行从源码构建](#从源码构建)。
 
-1. **安装应用**：构建 APK 后安装到手机；打开慧铭记账即可手动记录收支。
+1. **安装应用**：下载安装 APK；打开慧铭记账即可手动记录收支。从本地调试版切换时，若系统提示签名不一致，请先导出完整备份，再卸载旧版、安装并恢复备份。
 2. **开启自动记账**：进入「我的」，在「支付自动识别」中开启需要的微信或支付宝开关。
 3. **完成授权引导**：按应用指引开启「慧铭记账 · 页面识别」，按需检查后台运行设置；电池优化状态在返回应用后自动刷新，自启动与最近任务加锁显示上次人工确认，可重新打开设置并标为待检查。不同系统的入口可能不同。
 4. **确认第一笔**：在支持的支付成功页停留，看到「已记账」后，返回首页核对金额、商户与日期。
@@ -210,7 +210,25 @@ Debug 安装包输出到 `app/build/outputs/apk/debug/`。模拟器使用 `-Pled
 bash ./gradlew -PledgerPython=python3 -PledgerAbi=arm64-v8a :app:assembleRelease
 ```
 
-Release 默认未配置签名，`*-unsigned.apk` 必须自行签名后安装。发布者应将 APK 与对应版本源码、构建说明和第三方声明一同提供；签名私钥不得入库。原生运行库的固定源码、构建步骤与许可见 [third_party/ocr-runtime](../third_party/ocr-runtime/README.md)。
+本地 `assembleRelease` 默认输出 `*-unsigned.apk`，需要自行签名后安装。官方 GitHub Actions 在受信任的 main 构建中使用固定签名，生成可安装 APK；公开 Release 同时提供对应源码。签名私钥不得入库。原生运行库的固定源码、构建步骤与许可见 [third_party/ocr-runtime](../third_party/ocr-runtime/README.md)。
+
+</details>
+
+<details>
+<summary>GitHub 自动打包、签名与发布</summary>
+
+[Android 工作流](workflows/android.yml) 并行运行源码检查、浏览器回归、Android 模拟器回归和 ARM64 打包。打包不依赖模拟器任务，可在 Actions 的 `android-arm64` 产物中查看结果；只有官方仓库 main 的受信任构建会使用发布签名，PR 与其他分支只输出标明 `unsigned` 的编译产物。
+
+签名使用仓库 Actions Secrets 中的 `ANDROID_KEYSTORE_BASE64`（PKCS#12 文件的 Base64）与 `ANDROID_KEYSTORE_PASSWORD`，密钥别名为 `huiming-ledger`。私钥、密码和本地备份均留在仓库之外；fork 若要签名发布，需要配置自己的密钥、仓库条件和 Release 中的公开证书 SHA-256。不要为了新版本重新生成签名，否则旧版无法直接覆盖升级。
+
+[发布工作流](workflows/release.yml) 由 `v*` 标签触发，也可手动指定已有标签。标签必须为应用 `versionName` 加 `v`，并指向已推送 main 的同一个提交，例如：
+
+```sh
+git tag v0.5.84-v6
+git push origin v0.5.84-v6
+```
+
+发布流程等待该提交的全部 Android 工作流任务成功，下载同一次构建的 APK 和检查过的源码，核对提交、版本、ARM64 ABI、校验值、APK 签名与固定证书，再上传至 GitHub Releases。任一检查失败均不发布；已存在的 Release 不会被覆盖。Release 页面可直接下载，无需进入 Actions 查找构建产物。
 
 </details>
 

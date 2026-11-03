@@ -10,6 +10,8 @@
 
 <p align="center">Android 11+ · 离线 OCR · 本地账本 · GPL-3.0-only</p>
 
+<p align="center"><a href="https://github.com/AldenHe/huiming-ledger/releases/latest">下载 Android APK</a> · <a href="https://github.com/AldenHe/huiming-ledger/actions/workflows/android.yml">构建与测试</a></p>
+
 ## 能做什么
 
 - **支付自动记账**：识别受支持的微信、支付宝支付成功页，自动记录支出。
@@ -123,7 +125,7 @@ V6 Tiny 的检测与识别权重合计约 **5.95 MiB**，V5 mobile 约 **20.37 M
 
 ## 开始使用
 
-1. 安装应用，在「我的」开启微信 / 支付宝自动识别或摇一摇，按引导完成授权。
+1. 从 [最新 Release](https://github.com/AldenHe/huiming-ledger/releases/latest) 下载 `arm64-v8a.apk` 并安装，在「我的」开启微信 / 支付宝自动识别或摇一摇，按引导完成授权。
 2. 在支持的支付成功页完成自动记账；漏记时用摇一摇、截图导入或手动补记。
 3. 回到账本核对记录；换机或卸载前，从「账单与备份」导出完整备份。
 
