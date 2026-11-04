@@ -167,10 +167,10 @@ internal class PermissionSetupController(private val activity:MainActivity,
     }
     private fun openAppInfo():Boolean=try {
         activity.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,Uri.fromParts("package",activity.packageName,null)));true
-    } catch(_:Exception) { message="请长按慧铭记账图标，进入应用信息，检查受限设置。";false }
+    } catch(_:Exception) { message="请长按花有谱图标，进入应用信息，检查受限设置。";false }
     private fun openBackground(key:String):Boolean {
         if(key=="task_lock") {
-            message="请在最近任务中找到慧铭记账，按本机指引检查加锁；无此项可跳过"
+            message="请在最近任务中找到花有谱，按本机指引检查加锁；无此项可跳过"
             if(net.ankio.ledger.capture.ScreenCaptureService.current?.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_RECENTS)==true)return true
         }
         val intent=when {

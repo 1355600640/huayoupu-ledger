@@ -293,13 +293,13 @@ class MainActivity : Activity() {
         startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply { type="image/*"; addCategory(Intent.CATEGORY_OPENABLE) }, IMAGE_REQUEST)
     }
     fun exportBackup() { startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-        type="application/zip"; addCategory(Intent.CATEGORY_OPENABLE); putExtra(Intent.EXTRA_TITLE,"慧铭记账完整备份-${java.time.LocalDate.now()}.zip")
+        type="application/zip"; addCategory(Intent.CATEGORY_OPENABLE); putExtra(Intent.EXTRA_TITLE,"花有谱完整备份-${java.time.LocalDate.now()}.zip")
     }, EXPORT_REQUEST) }
     fun exportBills(format:String) {
         val selected=LedgerCsvExport.Format.fromKey(format)
         startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
             type="text/csv";addCategory(Intent.CATEGORY_OPENABLE)
-            putExtra(Intent.EXTRA_TITLE,"慧铭记账-${if(selected==LedgerCsvExport.Format.QIANJI)"钱迹模板" else "全部账单"}-${java.time.LocalDate.now()}.csv")
+            putExtra(Intent.EXTRA_TITLE,"花有谱-${if(selected==LedgerCsvExport.Format.QIANJI)"钱迹模板" else "全部账单"}-${java.time.LocalDate.now()}.csv")
         },if(selected==LedgerCsvExport.Format.QIANJI)CSV_QIANJI_REQUEST else CSV_GENERAL_REQUEST)
     }
     fun importBills() { startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
@@ -321,7 +321,7 @@ class MainActivity : Activity() {
             preview.errors.take(4).forEach { sheet.content.addView(sheet.text("第 ${it.row} 行：${it.message}",13,MintDialog.MUTED)) }
             if(preview.errors.size>4)sheet.content.addView(sheet.text("另有 ${preview.errors.size-4} 行无效",13,MintDialog.MUTED))
         }
-        sheet.content.addView(sheet.text("按表头自动匹配字段；重复账单跳过，已有账单不覆盖。账户和图片不从 CSV 导入，识别开关保持当前设置。钱迹模板需为最终人民币金额；零金额退款请用慧铭通用 CSV。",12,MintDialog.MUTED).apply { setPadding(0,sheet.dp(16),0,0) })
+        sheet.content.addView(sheet.text("按表头自动匹配字段；重复账单跳过，已有账单不覆盖。账户和图片不从 CSV 导入，识别开关保持当前设置。钱迹模板需为最终人民币金额；零金额退款请用花有谱通用 CSV。",12,MintDialog.MUTED).apply { setPadding(0,sheet.dp(16),0,0) })
         if(preview.ready>0)sheet.action("确认导入 ${preview.ready} 笔",true) {
             sheet.dismiss()
             uiScope.launch {
@@ -339,7 +339,7 @@ class MainActivity : Activity() {
     }
     private fun exportDiagnostics() { startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
         type="application/json";addCategory(Intent.CATEGORY_OPENABLE)
-        putExtra(Intent.EXTRA_TITLE,"慧铭记账识别诊断-${java.time.LocalDate.now()}.json")
+        putExtra(Intent.EXTRA_TITLE,"花有谱识别诊断-${java.time.LocalDate.now()}.json")
     }, DIAGNOSTICS_REQUEST) }
     fun restoreBackup() { startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
         type="*/*";putExtra(Intent.EXTRA_MIME_TYPES,arrayOf("application/zip","application/json","application/octet-stream","application/x-zip-compressed"));addCategory(Intent.CATEGORY_OPENABLE)
@@ -479,7 +479,7 @@ class MainActivity : Activity() {
             } else try {
                 startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
                 message("请在系统页面关闭对应授权")
-            } catch (_: Exception) { message("请在系统设置中关闭对应权限；慧铭记账已停止此渠道采集") }
+            } catch (_: Exception) { message("请在系统设置中关闭对应权限；花有谱已停止此渠道采集") }
         }
     }
     fun showShakeStatus() {
@@ -550,9 +550,9 @@ class MainActivity : Activity() {
     fun showAbout(origin:android.graphics.RectF?=null,originRadius:Float?=null) {
         if(modelPage?.isClosing==true)modelPage?.dismiss(false)
         if(modelPage!=null)return
-        val sheet=MintDialog(this,"慧铭记账","把日子记在一起 · ${BuildConfig.VERSION_NAME}")
+        val sheet=MintDialog(this,"花有谱","少点手动，收支有谱 · ${BuildConfig.VERSION_NAME}")
         sheet.label("为什么做这个 App")
-        sheet.content.addView(sheet.text("平时想把账记清楚，却总会遇到这些小麻烦：付款时忘了记，月底想补又记不清；账单散在不同应用里，手动一笔笔填也很费时间。\n\n所以做了慧铭记账，希望把日常记账变得简单一点。能识别的收支少填几步，需要补充的账单随时记录，让每个月的钱花在哪里更清楚。\n\n无需配置，识别在本机完成，截图和账本保存在本机。",15,MintDialog.INK))
+        sheet.content.addView(sheet.text("平时想把账记清楚，却总会遇到这些小麻烦：付款时忘了记，月底想补又记不清；账单散在不同应用里，手动一笔笔填也很费时间。\n\n所以做了花有谱，希望把日常记账变得简单一点。能识别的收支少填几步，需要补充的账单随时记录，让每个月的钱花在哪里更清楚。\n\n无需配置，识别在本机完成，截图和账本保存在本机。",15,MintDialog.INK))
         var afterDismiss:(()->Unit)?=null
         sheet.action("许可与第三方声明") { afterDismiss={ showLicenses() };sheet.dismiss() }
         sheet.onPageDismiss { if(!isFinishing&&!isDestroyed)afterDismiss?.invoke() }
@@ -560,12 +560,12 @@ class MainActivity : Activity() {
     }
     private fun showLicenses() {
         val sheet=MintDialog(this,"许可与第三方声明")
-        sheet.content.addView(sheet.text("慧铭记账项目代码以 GPL-3.0 开源，允许使用、修改与再分发。分发衍生程序时，须遵守 GPL 的对应源码与许可要求。\n\n内置识别使用 ${net.ankio.ledger.BuildConfig.LOCAL_OCR_LABEL}，另使用 AndroidX、Kotlin 等基础库；这些第三方内容保留各自许可与署名。\n\nFont Awesome：代码 MIT、字体 SIL OFL 1.1、图标 CC BY 4.0。银行标识权利属于各银行。来源与授权范围见 LICENSE、NOTICE.md。",14,MintDialog.MUTED))
+        sheet.content.addView(sheet.text("花有谱项目代码以 GPL-3.0 开源，允许使用、修改与再分发。分发衍生程序时，须遵守 GPL 的对应源码与许可要求。\n\n内置识别使用 ${net.ankio.ledger.BuildConfig.LOCAL_OCR_LABEL}，另使用 AndroidX、Kotlin 等基础库；这些第三方内容保留各自许可与署名。\n\nFont Awesome：代码 MIT、字体 SIL OFL 1.1、图标 CC BY 4.0。银行标识权利属于各银行。来源与授权范围见 LICENSE、NOTICE.md。",14,MintDialog.MUTED))
         var afterDismiss:(()->Unit)?=null
         sheet.action("查看项目开源协议") { afterDismiss={ showOfflineNotices(false,true) };sheet.dismiss() }
         sheet.action("查看第三方依赖声明") { afterDismiss={ showOfflineNotices(false) };sheet.dismiss() }
         sheet.action("字体与图标声明") { afterDismiss={ showOfflineNotices(true) };sheet.dismiss() }
-        sheet.action("返回关于慧铭记账",true) { afterDismiss={ showAbout() };sheet.dismiss() }
+        sheet.action("返回关于花有谱",true) { afterDismiss={ showAbout() };sheet.dismiss() }
         sheet.onPageDismiss { if(!isFinishing&&!isDestroyed)afterDismiss?.invoke() }
         sheet.showEmbedded(this,null,pageTag="licenses-page")
     }

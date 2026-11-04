@@ -86,8 +86,8 @@ jobs:
         run: |
           bash ./gradlew -PledgerAbi=x86_64 :core:test :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest :app:lintDebug --stacktrace
           mkdir -p ci-artifacts
-          cp app/build/outputs/apk/debug/*.apk ci-artifacts/Huiming-Ledger-debug-x86_64.apk
-          cp app/build/outputs/apk/androidTest/debug/*.apk ci-artifacts/Huiming-Ledger-test-x86_64.apk
+          cp app/build/outputs/apk/debug/*.apk ci-artifacts/Huayoupu-Ledger-debug-x86_64.apk
+          cp app/build/outputs/apk/androidTest/debug/*.apk ci-artifacts/Huayoupu-Ledger-test-x86_64.apk
       - name: Enable emulator acceleration
         run: sudo chmod 666 /dev/kvm
       - name: Android storage, queue and inference regressions
@@ -147,7 +147,7 @@ jobs:
           item, = metadata['elements']
           output = pathlib.Path('ci-artifacts')
           output.mkdir(exist_ok=True)
-          name = f"Huiming-Ledger-{item['versionName']}-arm64-v8a-unsigned.apk"
+          name = f"Huayoupu-Ledger-{item['versionName']}-arm64-v8a-unsigned.apk"
           shutil.copy2(root / item['outputFile'], output / name)
           (output / 'build-info.json').write_text(json.dumps({
               'package': metadata['applicationId'], 'version': item['versionName'],

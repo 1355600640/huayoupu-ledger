@@ -39,7 +39,7 @@ object LedgerCsvImport {
         val header=rows.first()
         val own=header.size==general.size && header.toSet()==general.toSet()
         val qi=header.size==qianji.size && header.toSet()==qianji.toSet()
-        require(own || qi) { "请选择慧铭通用 CSV 或钱迹 V10 模板" }
+        require(own || qi) { "请选择花有谱通用 CSV 或钱迹 V10 模板" }
         val records=mutableListOf<LedgerRecord>()
         val errors=mutableListOf<RowError>()
         val occurrences=mutableMapOf<String,Int>()
@@ -61,7 +61,7 @@ object LedgerCsvImport {
                 errors.add(RowError(index+2,error.message ?: "字段无效"))
             }
         }
-        return Document(if(own)"慧铭通用 CSV" else "钱迹 V10 模板",records,errors,rows.size-1)
+        return Document(if(own)"花有谱通用 CSV" else "钱迹 V10 模板",records,errors,rows.size-1)
     }
 
     fun preview(store:LedgerStore,document:Document):Preview=synchronized(store) {

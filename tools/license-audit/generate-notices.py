@@ -71,7 +71,7 @@ def main():
                      '<small>该依赖包未附独立通知文件；以上为发布者 POM 中的许可声明。</small>') + '</li>')
     (OUTPUT / 'index.html').write_text(page('第三方依赖与许可',
         '<h1>第三方依赖与许可</h1><p>以下为当前 Release 实际解析的基础库及其原始通知。'
-        '这些代码、模型和字体不是慧铭自研。许可中出现 GPL/LGPL 等名称时，应结合具体文件、双重许可及例外条款理解，'
+        '这些代码、模型和字体不是花有谱自研。许可中出现 GPL/LGPL 等名称时，应结合具体文件、双重许可及例外条款理解，'
         '本目录不作“整个安装包无 GPL”的保证。</p><ol>' + ''.join(rows) + '</ol>'
         '<p>Font Awesome 的完整通知另见应用内“字体与图标声明”。</p>'), encoding='utf-8')
     (OUTPUT / 'inventory.json').write_text(json.dumps(inventory, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="app/src/main/res/drawable-nodpi/zhiyu_icon.png" width="88" height="88" alt="慧铭记账" />
+  <img src=".github/branding/huayoupu-icon.png" width="88" height="88" alt="花有谱" />
 </p>
 
-<h1 align="center">Huiming Ledger · 慧铭记账</h1>
+<h1 align="center">花有谱 · Huayoupu</h1>
 
-<p align="center"><strong>支付后自动记一笔，漏记时摇一摇。</strong></p>
+<p align="center"><strong>少点手动，收支有谱。</strong></p>
 
-<p align="center">识别、账本、统计都在手机上完成，无需账号、API Key 或服务器。</p>
+<p align="center">支付后自动识别记账，漏记时摇一摇补录。识别、账本和统计都在本机完成，无需账号或服务器。</p>
 
 <p align="center">Android 11+ · 离线 OCR · 本地账本 · GPL-3.0-only</p>
 
@@ -24,7 +24,7 @@
 
 ## 界面预览
 
-以下为应用在 Android 模拟器中**实际运行的页面截图**，使用示例账单与账户数据；点击图片可放大。
+以下为应用在 Android 模拟器中**实际运行的页面截图**，使用示例账单与账户数据；点击图片可放大。部分功能截图来自改名前版本，仍显示旧名称“慧铭记账”；当前应用已更名为“花有谱”。
 
 | 首页账本 | 收支统计 | 资产管理 |
 | :---: | :---: | :---: |
@@ -113,7 +113,7 @@ V6 Tiny 的检测与识别权重合计约 **5.95 MiB**，V5 mobile 约 **20.37 M
 
 部分微信支付成功页在普通无障碍服务下只返回空根节点，单纯补读取 flags 仍然无效。我们做过同一真机成功页的只读 **A→B→A** 对照：保持诊断逻辑、权限与 flags 相同，仅更换服务完整类名，普通入口的有效采样均为 **1 个空节点**，兼容入口的 8 次采样均读到 **32 个节点**及“支付成功”“完成”，换回后再次为空。
 
-当前使用沿用 `SelectToSpeakService` 完整类名的[兼容入口](app/src/main/java/com/google/android/accessibility/selecttospeak/SelectToSpeakService.kt)，内部继承慧铭自己的识别服务；系统中仍显示“慧铭记账 · 页面识别”，`isAccessibilityTool=false`。这项适配未引入 Google 代码或系统权限；微信内部判断机制并未公开，对照结果只证明已测环境中的类名差异有效。
+当前使用沿用 `SelectToSpeakService` 完整类名的[兼容入口](app/src/main/java/com/google/android/accessibility/selecttospeak/SelectToSpeakService.kt)，内部继承花有谱自己的识别服务；系统中仍显示“花有谱 · 页面识别”，`isAccessibilityTool=false`。这项适配未引入 Google 代码或系统权限；微信内部判断机制并未公开，对照结果只证明已测环境中的类名差异有效。
 
 支付成功页到本地账本的流程为：
 
@@ -137,4 +137,4 @@ V6 Tiny 的检测与识别权重合计约 **5.95 MiB**，V5 mobile 约 **20.37 M
 
 ## 社区交流
 
-[LINUX DO](https://linux.do/) · 真诚、友善、团结、专业。欢迎佬友交流使用体验、反馈问题，一起改进慧铭记账。
+[LINUX DO](https://linux.do/) · 真诚、友善、团结、专业。欢迎佬友交流使用体验、反馈问题，一起改进花有谱。

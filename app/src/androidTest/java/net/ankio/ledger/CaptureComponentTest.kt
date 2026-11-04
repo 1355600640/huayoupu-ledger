@@ -25,7 +25,7 @@ class CaptureComponentTest {
         val declared=app.packageManager.queryIntentServices(Intent(AccessibilityService.SERVICE_INTERFACE).setPackage(app.packageName),0)
         assertEquals("Exactly one user-visible capture service must be declared",listOf(expected),
             declared.map { ComponentName(it.serviceInfo.packageName,it.serviceInfo.name) })
-        assertEquals("慧铭记账 · 页面识别",declared.single().loadLabel(app.packageManager).toString())
+        assertEquals("花有谱 · 页面识别",declared.single().loadLabel(app.packageManager).toString())
         val automation=InstrumentationRegistry.getInstrumentation().getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES)
         val resolver=app.contentResolver
         val services=Settings.Secure.getString(resolver,"enabled_accessibility_services")

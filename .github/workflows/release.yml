@@ -82,13 +82,13 @@ jobs:
         run: |
           set -euo pipefail
           cat > "$RUNNER_TEMP/release-notes.md" <<EOF
-          慧铭记账 ${RELEASE_TAG#v}
+          花有谱 ${RELEASE_TAG#v}
 
-          下载下方 **Huiming-Ledger-*-arm64-v8a.apk**，在 Android 11 或更高版本的 ARM64 手机上安装。
+          下载下方 **Huayoupu-Ledger-*-arm64-v8a.apk**，在 Android 11 或更高版本的 ARM64 手机上安装。
 
           - APK 由 GitHub Actions 构建，并使用项目固定签名。
           - 对应提交：$RELEASE_COMMIT；源码、浏览器、单元测试、lint 和 Android 模拟器回归均已通过。
           - 同时提供 APK SHA-256 校验值、构建信息和对应的完整公开源码 ZIP。
           - 从本地调试版切换时，若提示签名不一致，请先在应用内导出备份，再卸载旧版、安装并恢复备份。
           EOF
-          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --latest --title "慧铭记账 ${RELEASE_TAG#v}" --notes-file "$RUNNER_TEMP/release-notes.md" release/*.apk release/*.sha256 release/Huiming-Ledger-source.zip release/build-info.json
+          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --latest --title "花有谱 ${RELEASE_TAG#v}" --notes-file "$RUNNER_TEMP/release-notes.md" release/*.apk release/*.sha256 release/Huiming-Ledger-source.zip release/build-info.json
