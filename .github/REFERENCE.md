@@ -17,7 +17,7 @@
 
 ## 微信 / 支付宝无感识别优化
 
-以下优化已在 **0.5.85-v6** 完成验证，改名版本 **0.5.87-v6** 保留这些实现。这里的“无感”是指：完成首次授权并开启对应应用后，在受支持的支付成功页上，**无需再摇动手机、手动截图或切回花有谱，即可在本机识别并入账**。识别仍会短暂显示进度或结果；不代表完全没有提示，也不保证所有页面都能自动采集。
+以下优化已在 **0.5.85-v6** 完成验证，改名版本 **0.5.88-v6** 保留这些实现。这里的“无感”是指：完成首次授权并开启对应应用后，在受支持的支付成功页上，**无需再摇动手机、手动截图或切回花有谱，即可在本机识别并入账**。识别仍会短暂显示进度或结果；不代表完全没有提示，也不保证所有页面都能自动采集。
 
 | 优化 | 解决的问题与当前行为 |
 | --- | --- |
@@ -128,7 +128,7 @@ Manifest 不声明 `READ_SMS` / `RECEIVE_SMS` / `POST_NOTIFICATIONS`，没有注
 
 ## 安装与快速开始
 
-需要 **Android 11 或更新版本的 ARM64 手机**。在 [最新 Release](https://github.com/AldenHe/huiming-ledger/releases/latest) 下载安装 APK（改名后文件前缀为 `Huayoupu-Ledger-`，历史版本为 `Huiming-Ledger-`）；同页提供 SHA-256 校验值和对应源码。也可[自行从源码构建](#从源码构建)。
+需要 **Android 11 或更新版本的 ARM64 手机**。在 [最新 Release](https://github.com/AldenHe/huayoupu-ledger/releases/latest) 下载安装 APK（改名后文件前缀为 `Huayoupu-Ledger-`，历史版本为 `Huiming-Ledger-`）；同页提供 SHA-256 校验值和对应源码。也可[自行从源码构建](#从源码构建)。
 
 1. **安装应用**：下载安装 APK；打开花有谱即可手动记录收支。从本地调试版切换时，若系统提示签名不一致，请先导出完整备份，再卸载旧版、安装并恢复备份。
 2. **开启自动记账**：进入「我的」，在「支付自动识别」中开启需要的微信或支付宝开关。
@@ -248,7 +248,7 @@ bash ./gradlew -PledgerPython=python3 -PledgerAbi=x86_64 :app:connectedDebugAndr
 生成可审查的源码 ZIP：
 
 ```sh
-python3 scripts/check-public-source.py --output output/Huiming-Ledger-source.zip
+python3 scripts/check-public-source.py --output output/Huayoupu-Ledger-source.zip
 ```
 
 命令检查当前文件集并排除本机缓存、日志、截图、签名文件和原型原件，不导出 Git 历史。本机工具链安装在项目目录外。生成的 `.tools/`、各模块 `build/` 和测试依赖目录仅为可重建缓存，无需提交；README 展示用截图保存在 `.github/screenshots/`；日常调试截图、验证报告及临时安装包应保存到项目外。已有 Git 历史需要单独检查。

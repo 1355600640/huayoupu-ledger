@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   release:
-    if: github.repository == 'AldenHe/huiming-ledger'
+    if: github.repository == 'AldenHe/huayoupu-ledger'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     permissions:
@@ -91,4 +91,4 @@ jobs:
           - 同时提供 APK SHA-256 校验值、构建信息和对应的完整公开源码 ZIP。
           - 从本地调试版切换时，若提示签名不一致，请先在应用内导出备份，再卸载旧版、安装并恢复备份。
           EOF
-          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --latest --title "花有谱 ${RELEASE_TAG#v}" --notes-file "$RUNNER_TEMP/release-notes.md" release/*.apk release/*.sha256 release/Huiming-Ledger-source.zip release/build-info.json
+          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --latest --title "花有谱 ${RELEASE_TAG#v}" --notes-file "$RUNNER_TEMP/release-notes.md" release/*.apk release/*.sha256 release/Huayoupu-Ledger-source.zip release/build-info.json

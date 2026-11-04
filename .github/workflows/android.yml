@@ -21,13 +21,13 @@ jobs:
       - name: Check public sources and pinned notices
         run: |
           python -m unittest discover -s scripts/tests
-          python scripts/check-public-source.py --output output/Huiming-Ledger-source.zip
+          python scripts/check-public-source.py --output output/Huayoupu-Ledger-source.zip
       - uses: actions/upload-artifact@v4
         with:
           name: checked-source
           path: |
-            output/Huiming-Ledger-source.zip
-            output/Huiming-Ledger-source.sha256
+            output/Huayoupu-Ledger-source.zip
+            output/Huayoupu-Ledger-source.sha256
 
   browser:
     runs-on: ubuntu-24.04
@@ -155,7 +155,7 @@ jobs:
           }, indent=2) + '\n')
           PY
       - name: Sign trusted main builds
-        if: github.repository == 'AldenHe/huiming-ledger' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: github.repository == 'AldenHe/huayoupu-ledger' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
