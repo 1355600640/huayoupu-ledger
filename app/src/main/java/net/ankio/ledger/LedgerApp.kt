@@ -67,7 +67,10 @@ class LedgerApp : Application() {
     val recognizer by lazy { OcrClient(this) }
     val importer by lazy { ImageImporter(this) }
     val coordinator by lazy { CaptureCoordinator(this) }
-    fun changed() { revision.value = System.nanoTime() }
+    fun changed() {
+        revision.value = System.nanoTime()
+        net.ankio.ledger.widget.TodayLedgerWidgetProvider.updateAll(this)
+    }
 }
 
 val Context.ledger: LedgerApp get() = applicationContext as LedgerApp

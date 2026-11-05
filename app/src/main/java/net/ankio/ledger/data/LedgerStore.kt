@@ -34,6 +34,7 @@ sealed class IngestResult {
 }
 
 data class DeletedRecord(val id:Long,val expiresAt:Long)
+data class DayTotals(val expenseCents: Long, val incomeCents: Long)
 
 class LedgerStore(context: Context, private val name: String = "ledger.db", private val screenshots: ScreenshotStore = ScreenshotStore.get(context)) : SQLiteOpenHelper(context, name, null, 8) {
     private fun imageOwner(id: Long) = "ledger:$name:$id"
@@ -515,6 +516,30 @@ class LedgerStore(context: Context, private val name: String = "ledger.db", priv
             it.capture.source in setOf(Source.OCR,Source.IMAGE)
     }.mapNotNull { record -> TransactionRejection.reason(record.capture.text)?.let { record.id to it } }
         .toMap().also { drafts -> drafts.keys.forEach(::delete) }
+
+    fun todayTotals(): DayTotals {
+        val zone = java.time.ZoneId.systemDefault()
+        val today = java.time.LocalDate.now()
+        val start = today.atStartOfDay(zone).toInstant().toEpochMilli()
+        val end = today.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
+        var expense = 0L
+        var income = 0L
+        readableDatabase.rawQuery(
+            "SELECT direction, COALESCE(SUM(amount), 0) FROM records r WHERE state='POSTED' AND occurred_at >= ? AND occurred_at < ? AND NOT EXISTS(SELECT 1 FROM record_deletions d WHERE d.record_id=r.id) GROUP BY direction",
+            arrayOf(start.toString(), end.toString())
+        ).use { cursor ->
+            while (cursor.moveToNext()) {
+                val direction = cursor.getString(0)
+                val sum = cursor.getLong(1)
+                if (direction == "INCOME") {
+                    income += sum
+                } else {
+                    expense += sum
+                }
+            }
+        }
+        return DayTotals(expense, income)
+    }
 
     @Synchronized
     fun saveEdited(record: LedgerRecord): LedgerRecord {

@@ -40,6 +40,7 @@ class MainActivity : Activity() {
     private var ready = false
     private var pendingCaptureRepair=false
     private var pendingRecordId:Long?=null
+    private var pendingOpenManual=false
     private var pendingChannel: ChannelSettings.Channel? = null
     internal val permissionSetup by lazy { PermissionSetupController(this) }
     @Volatile private var savedPageState: String? = null
@@ -51,6 +52,8 @@ class MainActivity : Activity() {
         pendingCaptureRepair=intent.action==net.ankio.ledger.capture.CaptureHealth.REPAIR
         pendingRecordId=savedInstanceState?.getLong("pendingRecordId",0)?.takeIf { it>0 }
             ?:intent.takeIf { it.action==OPEN_RECORD }?.getLongExtra("recordId",0)?.takeIf { it>0 }
+        pendingOpenManual=savedInstanceState?.getBoolean("pendingOpenManual",false)
+            ?:(intent.action==ACTION_ADD_RECORD || intent.getBooleanExtra(EXTRA_OPEN_MANUAL,false))
         window.setDecorFitsSystemWindows(false)
         savedPageState = savedInstanceState?.getString("pageState")
         pendingChannel = savedInstanceState?.getString("pendingChannel")?.let { key -> ChannelSettings.Channel.entries.firstOrNull { it.key == key } }
@@ -125,6 +128,10 @@ class MainActivity : Activity() {
                     permissionSetup.resume()
                     resumeCaptureRepair()
                     openPendingRecord()
+                    if (pendingOpenManual) {
+                        pendingOpenManual = false
+                        openManualRecord()
+                    }
                 }
             }
         }
@@ -246,6 +253,13 @@ class MainActivity : Activity() {
         super.onNewIntent(intent);setIntent(intent)
         if(intent.action==net.ankio.ledger.capture.CaptureHealth.REPAIR) { pendingCaptureRepair=true;resumeCaptureRepair() }
         if(intent.action==OPEN_RECORD) { pendingRecordId=intent.getLongExtra("recordId",0).takeIf { it>0 };openPendingRecord() }
+        if(intent.action==ACTION_ADD_RECORD || intent.getBooleanExtra(EXTRA_OPEN_MANUAL,false)) {
+            if(ready) openManualRecord() else pendingOpenManual=true
+        }
+    }
+    fun openManualRecord() {
+        if(!ready || isDestroyed)return
+        dispatch("openManual","true")
     }
     private fun openPendingRecord() {
         if(!ready)return
@@ -281,6 +295,7 @@ class MainActivity : Activity() {
     }
     override fun onSaveInstanceState(outState: Bundle) {
         pendingRecordId?.let { outState.putLong("pendingRecordId",it) }
+        if (pendingOpenManual) outState.putBoolean("pendingOpenManual", true)
         savedPageState?.let { outState.putString("pageState", it) }
         pendingChannel?.let { outState.putString("pendingChannel", it.key) }
         permissionSetup.saveState()?.let { outState.putString("permissionSetup",it.toString()) }
@@ -593,5 +608,5 @@ class MainActivity : Activity() {
         super.onRequestPermissionsResult(requestCode,permissions,grantResults); refresh()
         if(permissionSetup.active)permissionSetup.resume()
     }
-    companion object { const val OPEN_RECORD="net.ankio.ledger.OPEN_RECORD";const val IMAGE_REQUEST=10; const val EXPORT_REQUEST=11; const val RESTORE_REQUEST=12; const val DIAGNOSTICS_REQUEST=13;const val CSV_GENERAL_REQUEST=14;const val CSV_QIANJI_REQUEST=15;const val CSV_IMPORT_REQUEST=16 }
+    companion object { const val OPEN_RECORD="net.ankio.ledger.OPEN_RECORD";const val ACTION_ADD_RECORD="net.ankio.ledger.action.ADD_RECORD";const val EXTRA_OPEN_MANUAL="openManual";const val IMAGE_REQUEST=10; const val EXPORT_REQUEST=11; const val RESTORE_REQUEST=12; const val DIAGNOSTICS_REQUEST=13;const val CSV_GENERAL_REQUEST=14;const val CSV_QIANJI_REQUEST=15;const val CSV_IMPORT_REQUEST=16 }
 }
