@@ -214,8 +214,8 @@ class MainActivity : Activity() {
     fun message(value: String) { if (ready) dispatch("message", JSONObject.quote(value)) else Toast.makeText(this, value, Toast.LENGTH_LONG).show() }
     private fun handleBack() {
         modelPage?.let { it.back(); return }
-        if (!ready) { finish(); return }
-        webView.evaluateJavascript("window.LedgerUI.back()") { handled -> if (handled != "true") finish() }
+        if (!ready) { moveTaskToBack(true); return }
+        webView.evaluateJavascript("window.LedgerUI.back()") { handled -> if (handled != "true") moveTaskToBack(true) }
     }
     @Deprecated("Native activity back navigation")
     override fun onBackPressed() = handleBack()
