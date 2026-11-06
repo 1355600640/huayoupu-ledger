@@ -253,14 +253,27 @@ class MainActivity : Activity() {
             else if (ledger.channels.permitted(channel)) enableChannel(channel)
             else { ledger.channels.set(channel, false); ledger.changed(); message("尚未获得授权，功能未开启") }
         }
-        if (::webView.isInitialized) { webView.onResume(); refresh();permissionSetup.resume();resumeCaptureRepair() }
+        if (::webView.isInitialized) {
+            webView.onResume()
+            refresh()
+            permissionSetup.resume()
+            resumeCaptureRepair()
+            openPendingRecord()
+            if (pendingOpenManual) {
+                pendingOpenManual = false
+                openManualRecord()
+            }
+        }
     }
     override fun onNewIntent(intent:Intent) {
         super.onNewIntent(intent);setIntent(intent)
         if(intent.action==net.ankio.ledger.capture.CaptureHealth.REPAIR) { pendingCaptureRepair=true;resumeCaptureRepair() }
-        if(intent.action==OPEN_RECORD) { pendingRecordId=intent.getLongExtra("recordId",0).takeIf { it>0 };openPendingRecord() }
+        if(intent.action==OPEN_RECORD) {
+            pendingRecordId=intent.getLongExtra("recordId",0).takeIf { it>0 }
+            if(ready && captureRestoreResumed) openPendingRecord()
+        }
         if(intent.action==ACTION_ADD_RECORD || intent.getBooleanExtra(EXTRA_OPEN_MANUAL,false)) {
-            if(ready) openManualRecord() else pendingOpenManual=true
+            if(ready && captureRestoreResumed) openManualRecord() else pendingOpenManual=true
         }
     }
     fun openManualRecord() {

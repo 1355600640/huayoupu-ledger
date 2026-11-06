@@ -19,6 +19,7 @@ window.FluidMotion = (() => {
       panel._surface = null;
     }
     panel.style.willChange = '';
+    panel.style.transform = '';
     panel.classList.remove('fluid-active', 'fluid-pending');
   }
 
@@ -31,8 +32,8 @@ window.FluidMotion = (() => {
 
     panel.classList.remove('fluid-pending');
 
-    // Smooth physics curves: iOS/Material spring deceleration for open, crisp ease-in for close
-    const duration = reverse ? 240 : 320;
+    // Snappy physics curves: Material 3 deceleration for open, crisp ease-in for close
+    const duration = reverse ? 200 : 260;
     const easing = reverse ? 'cubic-bezier(0.3, 0, 0.8, 0.15)' : 'cubic-bezier(0.16, 1, 0.3, 1)';
 
     let startTransform = reverse ? 'translate3d(0, 0, 0)' : 'translate3d(0, 100%, 0)';
@@ -63,17 +64,13 @@ window.FluidMotion = (() => {
       panel._fade = null;
     }
 
-    panel.style.willChange = 'transform, opacity';
+    panel.style.willChange = 'transform';
 
-    const panelFrames = reverse
-      ? [
-          { transform: startTransform, opacity: 1 },
-          { transform: endTransform, opacity: 0.85 }
-        ]
-      : [
-          { transform: startTransform, opacity: 0.85 },
-          { transform: endTransform, opacity: 1 }
-        ];
+    // Pure transform animation: composite-only on GPU, eliminating reflow and layer rasterization
+    const panelFrames = [
+      { transform: startTransform },
+      { transform: endTransform }
+    ];
 
     const animation = panel.animate(panelFrames, {
       duration,
@@ -95,12 +92,18 @@ window.FluidMotion = (() => {
 
     animation.onfinish = () => {
       if (panel._morph !== animation) return;
-      animation.cancel();
       panel._morph = null;
+      if (reverse) {
+        panel.style.transform = endTransform;
+      } else {
+        panel.style.transform = 'translate3d(0, 0, 0)';
+      }
       if (panel._fade) {
+        if (shade) shade.style.opacity = reverse ? '0' : '1';
         panel._fade.cancel();
         panel._fade = null;
       }
+      animation.cancel();
       panel.style.willChange = '';
       done();
     };

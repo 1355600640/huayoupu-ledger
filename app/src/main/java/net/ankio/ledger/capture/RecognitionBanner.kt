@@ -48,7 +48,26 @@ class RecognitionBanner(private val service:Context) {
             val clickListener = if(onRepair!=null) {
                 View.OnClickListener { removeNow();onRepair() }
             } else if(openIntent!=null) {
-                View.OnClickListener { removeNow();runCatching { service.startActivity(openIntent) } }
+                View.OnClickListener {
+                    removeNow()
+                    runCatching { service.startActivity(openIntent) }
+                    if (android.os.Build.VERSION.SDK_INT >= 34) {
+                        runCatching {
+                            val pendingIntent = android.app.PendingIntent.getActivity(
+                                service,
+                                (recordId and 0xffff).toInt(),
+                                openIntent,
+                                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+                            )
+                            val options = android.app.ActivityOptions.makeBasic().apply {
+                                setPendingIntentBackgroundActivityStartMode(
+                                    android.app.ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
+                                )
+                            }.toBundle()
+                            pendingIntent.send(options)
+                        }
+                    }
+                }
             } else null
 
             if(clickListener!=null) {
@@ -96,7 +115,7 @@ class RecognitionBanner(private val service:Context) {
         }
     }
     private fun compactMessage(message:String):String=when {
-        message.startsWith("已记录账单") || message.startsWith("已记账") -> message
+        message.startsWith("已记录账单") || message.startsWith("已记账") || message.startsWith("金额待核对") -> message
         "全额退款" in message -> "已全额退款，不予记账"
         "这是退款记录" in message || message==net.ankio.ledger.core.StandaloneRefundReceipt.MESSAGE -> "退款记录，不予记账"
         "无法确认账单窗口" in message -> "请收起浮层后重试"
