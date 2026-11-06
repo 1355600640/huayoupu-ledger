@@ -49,6 +49,11 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        java.util.Locale.setDefault(java.util.Locale.SIMPLIFIED_CHINESE)
+        val config = resources.configuration
+        config.setLocale(java.util.Locale.SIMPLIFIED_CHINESE)
+        @Suppress("DEPRECATION")
+        resources.updateConfiguration(config, resources.displayMetrics)
         pendingCaptureRepair=intent.action==net.ankio.ledger.capture.CaptureHealth.REPAIR
         pendingRecordId=savedInstanceState?.getLong("pendingRecordId",0)?.takeIf { it>0 }
             ?:intent.takeIf { it.action==OPEN_RECORD }?.getLongExtra("recordId",0)?.takeIf { it>0 }
@@ -65,6 +70,7 @@ class MainActivity : Activity() {
             setBackgroundColor(Color.WHITE)
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
+            settings.defaultTextEncodingName = "UTF-8"
             settings.allowFileAccess = false
             settings.allowContentAccess = false
             settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW

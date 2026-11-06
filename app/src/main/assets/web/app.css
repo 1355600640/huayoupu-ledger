@@ -242,3 +242,18 @@ html,body{height:100%;overscroll-behavior:none}body.native-app{background:var(--
 .confirm-card .amount-field>span,.confirm-card .amount-field input{font-size:var(--amount-size)!important;font-weight:400;color:var(--mf-text-1);font-family:var(--font)}
 @media(max-width:380px){.entry-number{--amount-size:49px}}
 @media(max-width:360px){.confirm-card .amount-field{--amount-size:32px}}
+
+/* Chinese Month / Date Picker Component */
+.cmp-container{display:flex;flex-direction:column;gap:14px;padding:4px 0 8px}
+.cmp-header{display:flex;align-items:center;justify-content:space-between;background:var(--mf-surface-2);border-radius:var(--r-card);padding:8px 12px}
+.cmp-nav-btn{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;color:var(--mf-text-1);font-size:13px;border:1px solid var(--mf-border-2);cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.cmp-nav-btn:active{background:var(--mf-surface-3);transform:scale(.95)}
+.cmp-year-label{font-size:18px;font-weight:600;color:var(--mf-text-1);display:flex;align-items:baseline;gap:2px}
+.cmp-unit{font-size:14px;font-weight:400;color:var(--mf-text-2)}
+.cmp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.cmp-month-item{position:relative;display:flex;align-items:center;justify-content:center;height:46px;border-radius:14px;background:var(--mf-surface-2);color:var(--mf-text-1);font-size:15px;font-weight:500;border:1.5px solid transparent;cursor:pointer;transition:all .15s ease}
+.cmp-month-item:active{transform:scale(.96)}
+.cmp-month-item.current{border-color:var(--mf-verdant);color:var(--mf-verdant);font-weight:600}
+.cmp-month-item.active{background:var(--mf-verdant)!important;color:#fff!important;border-color:var(--mf-verdant)!important;font-weight:600;box-shadow:0 4px 12px rgba(78,136,111,.32)}
+.cmp-selected-hint{text-align:center;font-size:13px;color:var(--mf-text-3);margin-top:-2px}
+.cmp-selected-hint b{color:var(--mf-verdant);font-weight:600;margin-left:4px}

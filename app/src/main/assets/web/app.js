@@ -355,10 +355,39 @@ function restoreState(state){if(!state)return;month=/^\d{4}-\d{2}$/.test(state.m
 window.LedgerUI={getState,back(){if(window.LedgerSetup?.isOpen()){window.LedgerSetup.close();return true}if($('sheet').open){closeSheet();return true}if(manualOpen||manualClosing){if(!manualClosing)closeManual();return true}if(recordPanelOpen||recordPanelClosing){if(!recordPanelClosing)cancelEditor();return true}if(searching){setSearchOpen(false);return true}if(page!=='ledger'){go('ledger');return true}return false},event(type,data){switch(type){case'fileOperation':if(data){showSheet('文件处理中',`<div class="export-progress" role="status"><span class="recognition-spinner" aria-hidden="true"></span><p>${escapeText(data)}…</p></div>`);$('sheet').dataset.fileOperation='true'}else if($('sheet').dataset.fileOperation){closeSheet();delete $('sheet').dataset.fileOperation}break;case'permissionSetup':window.LedgerSetup?.render(data);break;case'fontScale':document.body.classList.toggle('large-text',data>=1.4);document.body.style.setProperty('--scaled-fab-font',`${35/Math.max(1,data)}px`);break;case'refresh':if(refresh()){if(page==='stats')drawStats();if(page==='assets')drawAssets();if(page==='manual')drawCategories()}break;case'navigate':go(data);break;case'message':notify(data);break;case'restoreState':restoreState(data);break;case'openRecord':openRecord(data,true);break;case'openManual':if(page!=='ledger')go('ledger');beginManual(true);break;case'preview':previewUrl=data.url;updateEditor();break;case'importStatus':working=!!data.working;if(working){newDraft();if(data.taskId){draft.recognitionTaskId=data.taskId;draft.taskStatus='CAPTURING'}go('import')}if(data.error)importError=String(data.error);updateEditor();break;case'importError':working=false;importError=typeof data==='string'?data:String(data?.error||'识别失败，请重新选择截图重试');updateEditor();break}}};
 document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;viewLimit=200;refresh();remember()});
 document.querySelectorAll('[data-channel]').forEach(s=>s.onclick=()=>setChannel(s.dataset.channel,s.getAttribute('aria-checked')!=='true'));
-$('month').onclick=()=>{showSheet('选择账本月份',`<input id="month-picker" class="month-input" type="month" value="${month}" min="2000-01" max="2100-12"/><div class="sheet-actions"><button id="month-prev">上个月</button><button id="month-next">下个月</button><button class="primary" id="month-apply">确定</button></div>`);const move=delta=>{const [y,m]=$('month-picker').value.split('-').map(Number),d=new Date(y,m-1+delta,1);$('month-picker').value=localTime(d.getTime()).slice(0,7)};$('month-prev').onclick=()=>move(-1);$('month-next').onclick=()=>move(1);$('month-apply').onclick=()=>{const value=$('month-picker').value;if(value){month=value;viewLimit=200;refresh();closeSheet();remember()}}};
+$('month').onclick=()=>{
+ let [selYear,selMonth]=month.split('-').map(Number);
+ const now=new Date(),curYear=now.getFullYear(),curMonth=now.getMonth()+1;
+ const monthLabels=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+ showSheet('选择账本日期',`<div class="cmp-container"><div class="cmp-header"><button type="button" class="cmp-nav-btn" id="cmp-prev-year" aria-label="上一年"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button><div class="cmp-year-label"><span id="cmp-year-val">${selYear}</span><span class="cmp-unit">年</span></div><button type="button" class="cmp-nav-btn" id="cmp-next-year" aria-label="下一年"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button></div><div class="cmp-grid" id="cmp-month-grid"></div><div class="cmp-selected-hint">当前选择：<b id="cmp-selected-text">${selYear}年${selMonth}月</b></div><div class="sheet-actions"><button type="button" id="cmp-this-month">本月</button><button type="button" class="primary" id="month-apply">确定</button></div></div>`);
+ const updateUI=()=>{
+  $('cmp-year-val').textContent=selYear;
+  $('cmp-selected-text').textContent=`${selYear}年${selMonth}月`;
+  $('cmp-month-grid').innerHTML=monthLabels.map((lbl,idx)=>{
+   const m=idx+1,isActive=selMonth===m,isCur=selYear===curYear&&curMonth===m;
+   return `<button type="button" class="cmp-month-item ${isActive?'active':''} ${isCur?'current':''}" data-m="${m}">${lbl}</button>`;
+  }).join('');
+  $('cmp-month-grid').querySelectorAll('.cmp-month-item').forEach(btn=>{
+   btn.onclick=()=>{
+    const m=Number(btn.dataset.m);
+    if(selMonth===m){$('month-apply').click();return}
+    selMonth=m;
+    updateUI();
+   };
+  });
+ };
+ $('cmp-prev-year').onclick=()=>{selYear=Math.max(2000,selYear-1);updateUI()};
+ $('cmp-next-year').onclick=()=>{selYear=Math.min(2100,selYear+1);updateUI()};
+ $('cmp-this-month').onclick=()=>{selYear=curYear;selMonth=curMonth;updateUI()};
+ $('month-apply').onclick=()=>{
+  const target=`${selYear}-${String(selMonth).padStart(2,'0')}`;
+  if(target){month=target;viewLimit=200;refresh();closeSheet();remember()}
+ };
+ updateUI();
+};
 $('category').onclick=()=>{showSheet(draft?.refund?'分类':'分类与收支方向',(draft?.refund?'':`<div class="direction-choices"><button type="button" data-direction="EXPENSE" class="${$('direction').dataset.value==='EXPENSE'?'active':''}">支出</button><button type="button" data-direction="INCOME" class="${$('direction').dataset.value==='INCOME'?'active':''}">收入</button></div>`)+[...new Set([...categories,...(customCategories.expense||[]),...(customCategories.income||[])])].map(c=>`<button class="sheet-row" data-category="${escapeText(c)}">${escapeText(c)}<span>${$('category').textContent===c?'✓':''}</span></button>`).join(''));document.querySelectorAll('[data-direction]').forEach(b=>b.onclick=()=>{$('direction').dataset.value=b.dataset.direction;updateAmountSign();document.querySelectorAll('[data-direction]').forEach(e=>e.classList.toggle('active',e===b));remember()});document.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>{$('category').textContent=b.dataset.category;closeSheet();remember()})};
 $('direction').onclick=()=>{if(draft?.refund)return;const income=$('direction').dataset.value!=='INCOME';$('direction').dataset.value=income?'INCOME':'EXPENSE';$('direction').textContent=income?'收入':'支出';updateAmountSign();remember()};
-$('time-label').onclick=()=>{showSheet('修改交易时间',`<input id="time-picker" class="month-input" type="datetime-local" value="${$('occurred-at').value}"/><div class="sheet-actions"><button onclick="closeSheet()">取消</button><button class="primary" id="time-apply">确定</button></div>`);$('time-apply').onclick=()=>{const value=$('time-picker').value;if(value){$('occurred-at').value=value;updateTimeChip();closeSheet();remember()}}};
+$('time-label').onclick=()=>{showSheet('修改交易时间',`<p class="sheet-copy">选择账单发生的时间</p><input id="time-picker" class="month-input" type="datetime-local" lang="zh-CN" value="${$('occurred-at').value}"/><div class="sheet-actions"><button type="button" id="time-now-btn">设为现在</button><button type="button" onclick="closeSheet()">取消</button><button class="primary" id="time-apply">确定</button></div>`);$('time-now-btn').onclick=()=>{$('time-picker').value=localTime(Date.now())};$('time-apply').onclick=()=>{const value=$('time-picker').value;if(value){$('occurred-at').value=value;updateTimeChip();closeSheet();remember()}}};
 $('import-form').onsubmit=e=>{e.preventDefault();submitDraft()};$('import-form').oninput=remember;
 $('refund-match').onclick=chooseRefundTarget;
 function merchantIconExplanation(record){
