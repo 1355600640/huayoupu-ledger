@@ -111,4 +111,58 @@ class LedgerReadView(private val store:LedgerStore) {
         result.put("budget", budgetObj)
         return result
     }
+
+    fun summaryRange(start:Long, end:Long, prevStart:Long?=null, prevEnd:Long?=null):JSONObject {
+        val result=JSONObject()
+        fun totals(s:Long,e:Long):JSONObject {
+            val total=JSONObject().put("expense",0L).put("income",0L).put("expenseCount",0).put("incomeCount",0)
+            store.readableDatabase.rawQuery("SELECT direction,COALESCE(SUM(amount),0),COUNT(*) FROM records r WHERE state='POSTED' AND occurred_at>=? AND occurred_at<? AND NOT EXISTS(SELECT 1 FROM record_deletions d WHERE d.record_id=r.id) GROUP BY direction",arrayOf(s.toString(),e.toString())).use { c ->
+                while(c.moveToNext()){val key=if(c.getString(0)=="INCOME")"income" else "expense";total.put(key,c.getLong(1));total.put(key+"Count",c.getInt(2))}
+            };return total
+        }
+        result.put("totals",totals(start,end))
+        val duration = end - start
+        val ps = prevStart ?: (start - duration)
+        val pe = prevEnd ?: start
+        result.put("previous",totals(ps,pe))
+        val categories=JSONArray();store.readableDatabase.rawQuery("SELECT direction,category,SUM(amount),COUNT(*) FROM records r WHERE state='POSTED' AND occurred_at>=? AND occurred_at<? AND NOT EXISTS(SELECT 1 FROM record_deletions d WHERE d.record_id=r.id) GROUP BY direction,category ORDER BY SUM(amount) DESC",arrayOf(start.toString(),end.toString())).use { c ->
+            while(c.moveToNext())categories.put(JSONObject().put("direction",c.getString(0)).put("name",c.getString(1)).put("amount",c.getLong(2)).put("count",c.getInt(3)))
+        };result.put("categories",categories)
+        return result
+    }
+
+    fun recordsRange(start:Long, end:Long, category:String="", direction:String="", offset:Int=0, limit:Int=200):JSONObject {
+        val where=StringBuilder("NOT EXISTS(SELECT 1 FROM record_deletions d WHERE d.record_id=r.id) AND r.occurred_at>=? AND r.occurred_at<?")
+        val args=mutableListOf(start.toString(), end.toString())
+        if(direction.isNotBlank()) { where.append(if(direction=="EXPENSE")" AND (r.direction=? OR r.direction IS NULL)" else " AND r.direction=?");args+=direction }
+        if(category.isNotBlank()) { where.append(" AND r.category=?");args+=category }
+        if(category.isNotBlank())where.append(" AND r.state='POSTED'")
+        val rows=JSONArray()
+        store.readableDatabase.rawQuery("""SELECT r.id,r.uid,r.merchant,r.category,r.note,r.amount,r.direction,r.occurred_at,r.state,r.source,
+            r.reason,r.duplicate_id,r.refund_provider,r.refund_original,r.refund_amount,r.refund_mode,r.refund_id,
+            i.merchant_key,length(a.image), (SELECT MAX(sequence) FROM capture_history h WHERE h.record_id=r.id),r.transaction_id,
+            CASE WHEN lower(r.origin) LIKE '%com.tencent.mm%' OR r.origin IN ('微信','微信支付') THEN 'wechat'
+                WHEN lower(r.origin) LIKE '%com.eg.android.alipaygphone%' OR r.origin='支付宝' THEN 'alipay'
+                WHEN r.source IN ('IMAGE','OCR') AND instr(r.raw_text,'微信')>0 AND instr(r.raw_text,'支付宝')=0 THEN 'wechat'
+                WHEN r.source IN ('IMAGE','OCR') AND instr(r.raw_text,'支付宝')>0 AND instr(r.raw_text,'微信')=0 THEN 'alipay' END
+            FROM records r LEFT JOIN merchant_icons i ON i.record_id=r.id LEFT JOIN merchant_icon_assets a ON a.merchant_key=i.merchant_key
+            WHERE $where ORDER BY r.occurred_at DESC,r.id DESC LIMIT ${limit+1} OFFSET $offset""",args.toTypedArray()).use { c ->
+            while(c.moveToNext())rows.put(JSONObject().apply {
+                put("id",c.getLong(0));put("uid",c.getString(1));put("merchant",c.getString(2));put("category",c.getString(3));put("note",c.getString(4))
+                put("amountCents",if(c.isNull(5))JSONObject.NULL else c.getLong(5));put("direction",if(c.isNull(6))JSONObject.NULL else c.getString(6))
+                put("occurredAt",c.getLong(7));put("state",c.getString(8));put("source",c.getString(9));put("reason",c.getString(10))
+                put("duplicateId",if(c.isNull(11))JSONObject.NULL else c.getLong(11))
+                put("refund",if(c.isNull(12))JSONObject.NULL else JSONObject().put("provider",c.getString(12)).put("originalAmountCents",c.getLong(13))
+                    .put("refundedCents",c.getLong(14)).put("mode",c.getString(15)).put("refundId",if(c.isNull(16))JSONObject.NULL else c.getString(16)))
+                put("hasMerchantIcon",!c.isNull(18));put("merchantIconKey",if(c.isNull(18))JSONObject.NULL else c.getString(17));put("merchantIconRevision",c.getInt(18))
+                put("historyRevision",c.getInt(19).toString());put("hasScreenshot",false);put("captureMode","");put("iconStatus",if(!c.isNull(18))"cached" else "")
+                put("transactionId",if(c.isNull(20))JSONObject.NULL else c.getString(20))
+                put("paymentProvider",if(c.isNull(21))JSONObject.NULL else c.getString(21))
+            })
+        }
+        val more=rows.length()>limit;if(more)rows.remove(rows.length()-1)
+        val last=rows.optJSONObject(rows.length()-1)
+        return JSONObject().put("records",rows).put("hasMore",more).put("offset",offset).put("limit",limit)
+            .put("nextCursor",if(more && last!=null)JSONObject().put("occurredAt",last.getLong("occurredAt")).put("id",last.getLong("id")) else JSONObject.NULL)
+    }
 }

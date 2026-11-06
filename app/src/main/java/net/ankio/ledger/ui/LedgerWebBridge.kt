@@ -232,8 +232,20 @@ class LedgerWebBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun categoryRecords(month:String,category:String,direction:String,offset:Int):String = try {
         checkInput(category.length<=1024,"分类无效")
-        LedgerReadView(app.store).records(month,offset=offset,direction=direction,category=category).put("ok",true).toString()
+        if (month.contains("..")) {
+            val parts = month.split("..")
+            val start = parts[0].toLong()
+            val end = parts[1].toLong()
+            LedgerReadView(app.store).recordsRange(start, end, category=category, direction=direction, offset=offset).put("ok",true).toString()
+        } else {
+            LedgerReadView(app.store).records(month,offset=offset,direction=direction,category=category).put("ok",true).toString()
+        }
     } catch(_:Exception) { failure("明细读取失败").toString() }
+
+    @JavascriptInterface
+    fun statsRange(startMs:Long, endMs:Long):String = try {
+        LedgerReadView(app.store).summaryRange(startMs, endMs).put("ok",true).toString()
+    } catch(_:Exception) { failure("统计数据读取失败").toString() }
 
     @JavascriptInterface
     fun save(json: String): String = try {

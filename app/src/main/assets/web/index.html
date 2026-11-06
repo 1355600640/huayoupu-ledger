@@ -421,6 +421,17 @@
         0/500
        </span>
       </label>
+      <div class="manual-meta-row">
+       <button aria-label="选择交易时间" class="manual-time-btn" id="manual-time-btn" onclick="chooseManualTime()" type="button">
+        <i aria-hidden="true" class="fa-regular fa-clock">
+        </i>
+        <span id="manual-time-text">
+         今天
+        </span>
+        <i aria-hidden="true" class="fa-solid fa-chevron-down">
+        </i>
+       </button>
+      </div>
      </section>
      <section class="entry-import">
       <button aria-label="导入支付截图" onclick="newDraft();go('import');pickImage()" type="button">
@@ -451,9 +462,8 @@
       <button aria-label="3" class="" onclick="manualKey('3')" type="button">
        3
       </button>
-      <button aria-label="删除一位" class="" onclick="manualKey('backspace')" type="button">
-       <i aria-hidden="true" class="fa-solid fa-delete-left">
-       </i>
+      <button aria-label="加号" class="entry-op" onclick="manualKey('+')" type="button">
+       +
       </button>
       <button aria-label="4" class="" onclick="manualKey('4')" type="button">
        4
@@ -464,8 +474,8 @@
       <button aria-label="6" class="" onclick="manualKey('6')" type="button">
        6
       </button>
-      <button aria-label="." class="" onclick="manualKey('.')" type="button">
-       .
+      <button aria-label="减号" class="entry-op" onclick="manualKey('-')" type="button">
+       -
       </button>
       <button aria-label="7" class="" onclick="manualKey('7')" type="button">
        7
@@ -476,14 +486,18 @@
       <button aria-label="9" class="" onclick="manualKey('9')" type="button">
        9
       </button>
-      <button aria-label="保存" class="entry-save save-button" type="submit">
+      <button aria-label="保存" class="entry-save save-button" id="manual-save-btn" onclick="handleManualSave()" type="button">
        保存
       </button>
-      <button aria-label="0" class="entry-zero" onclick="manualKey('0')" type="button">
+      <button aria-label="." class="" onclick="manualKey('.')" type="button">
+       .
+      </button>
+      <button aria-label="0" class="" onclick="manualKey('0')" type="button">
        0
       </button>
-      <button aria-label="00" class="entry-zero" onclick="manualKey('00')" type="button">
-       00
+      <button aria-label="删除一位" class="" onclick="manualKey('backspace')" type="button">
+       <i aria-hidden="true" class="fa-solid fa-delete-left">
+       </i>
       </button>
      </div>
     </form>
@@ -499,7 +513,7 @@
       </div>
      </div>
      <div class="header-actions">
-      <button aria-label="选择统计月份" class="month" onclick="chooseStatsMonth()">
+      <button aria-label="选择统计周期" class="month" onclick="chooseStatsPeriod()">
        <span id="stats-month">
        </span>
        <i aria-hidden="true" class="fa-solid fa-chevron-down">
