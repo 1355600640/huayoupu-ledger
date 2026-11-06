@@ -24,8 +24,8 @@ body.permission-open>.workspace{filter:blur(4px);pointer-events:none}
 #detailDialog .shake-setup-copy b{font-size:14px}
 #detailDialog .shake-setup-copy p{font-size:13px;line-height:1.7;margin:5px 0 0;color:#818ba0}
 #detailDialog .shake-setup-status{font-size:12px;color:#939dae;margin-left:12px;white-space:nowrap}
-#detailDialog .shake-setup-status.done{color:#279e80}
-#detailDialog .configured{font-size:13px;color:#279e80;margin:0 0 10px}
+#detailDialog .shake-setup-status.done{color:var(--primary,#2F80ED)}
+#detailDialog .configured{font-size:13px;color:var(--primary,#2F80ED);margin:0 0 10px}
 #detailDialog .secondary{font-weight:400}
 #detailDialog.setup-sheet #setup-primary{margin-top:20px}
 .no-flex-gap #detailDialog .permission-guide-title>span{margin-left:12px}
@@ -60,7 +60,7 @@ body.permission-open>.workspace{filter:blur(4px);pointer-events:none}
 #detailDialog.system-flow .system-hero-icon{width:76px;height:76px;background:var(--mf-verdant-bg);border-radius:50%;display:grid;place-items:center;margin:0 auto 10px;color:var(--mf-verdant-strong);font-size:37px}
 #detailDialog.system-flow .system-hero h2{font-size:24px;text-align:center;margin:9px 0;font-weight:700;line-height:1.35;padding:0}
 #detailDialog.system-flow .system-hero p,#detailDialog.system-flow .background-heading p{font-size:13px;color:#81899a;line-height:1.6;margin:0}
-#detailDialog.system-flow .system-target{border-radius:20px;background:#e3f5ec;color:#288c71;font-size:11px;font-weight:600;width:max-content;max-width:100%;text-align:center;padding:5px 15px;margin:9px auto 13px}
+#detailDialog.system-flow .system-target{border-radius:20px;background:var(--primaryLight,#EAF3FF);color:var(--primary,#2F80ED);font-size:11px;font-weight:600;width:max-content;max-width:100%;text-align:center;padding:5px 15px;margin:9px auto 13px}
 #detailDialog.system-flow .flow-system-steps{background:#edf6ff;border-radius:12px;padding:14px 16px;margin:11px 0}
 #detailDialog.system-flow .flow-system-steps p{font-size:13px;margin:11px 0;display:flex;align-items:center;gap:12px}
 #detailDialog.system-flow .flow-system-steps em{background:linear-gradient(145deg,#6faaff,#1a7af0);width:24px;height:24px;flex-shrink:0}
@@ -75,31 +75,31 @@ body.permission-open>.workspace{filter:blur(4px);pointer-events:none}
 #detailDialog.system-flow .system-note>i{font-size:18px;flex-shrink:0;color:#8291a7;margin-top:1px}
 #detailDialog.system-flow .flow-tiny{font-size:10px;line-height:1.65;margin:8px 0;color:#939bad}
 #detailDialog.system-flow .flow-back{font-size:12px;margin:7px 0;padding:5px}
-#detailDialog.system-flow .restriction-steps{background:#ecf9f3;padding:16px;border-radius:13px;margin:15px 0}
+#detailDialog.system-flow .restriction-steps{background:var(--primarySoft,#F0F6FF);padding:16px;border-radius:13px;margin:15px 0}
 #detailDialog.system-flow .restriction-steps>div{display:flex;align-items:flex-start;gap:16px;padding:7px 0 17px}
-#detailDialog.system-flow .restriction-steps em{background:#0ca880;width:29px;height:29px;display:grid;place-items:center;font-style:normal;border-radius:50%;color:#fff;flex-shrink:0}
+#detailDialog.system-flow .restriction-steps em{background:var(--primary,#2F80ED);width:29px;height:29px;display:grid;place-items:center;font-style:normal;border-radius:50%;color:#fff;flex-shrink:0}
 #detailDialog.system-flow .restriction-steps b{font-size:14px}
 #detailDialog.system-flow .restriction-steps small{display:block;font-size:11px;color:#8290a2;margin-top:7px}
 #detailDialog.system-flow .system-chips{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin:5px 0 21px}
-#detailDialog.system-flow .system-chips>span{background:#eaf8f1;border-radius:18px;padding:7px 10px;color:#268e72;font-size:10px}
+#detailDialog.system-flow .system-chips>span{background:var(--primaryLight,#EAF3FF);border-radius:18px;padding:7px 10px;color:var(--primary,#2F80ED);font-size:10px}
 #detailDialog.system-flow .system-chips>small{font-size:9px;color:#7c879c}
 #detailDialog.system-flow .background-heading{text-align:center;margin:15px 0}
 #detailDialog.system-flow .background-heading h2{font-size:23px;text-align:center;margin:0 0 8px;line-height:1.4}
 #detailDialog.system-flow .background-accordion{display:grid;gap:6px}
 #detailDialog.system-flow .background-item{background:#f3f5fa;border-radius:12px;padding:0 9px 1px}
-#detailDialog.system-flow .background-item.expanded{background:linear-gradient(130deg,#e9f8f1,#effbf6)}
+#detailDialog.system-flow .background-item.expanded{background:var(--primarySoft,#F0F6FF)}
 #detailDialog.system-flow .background-toggle{display:flex;align-items:center;gap:12px;width:100%;padding:12px 4px;font-size:13px;text-align:left}
 #detailDialog.system-flow .background-toggle>em{background:#bfc6d2;border-radius:50%;color:#fff;width:27px;height:27px;display:grid;place-items:center;font-style:normal;flex-shrink:0}
-#detailDialog.system-flow .expanded .background-toggle>em{background:linear-gradient(130deg,#2bc7ac,#00966f)}
+#detailDialog.system-flow .expanded .background-toggle>em{background:var(--primary,#2F80ED)}
 #detailDialog.system-flow .background-toggle>b{flex:1}
 #detailDialog.system-flow .background-badge{font-size:10px;padding:5px 10px;border-radius:15px;background:#e9eef5;color:#7e8b9c;white-space:nowrap}
-#detailDialog.system-flow .expanded .background-badge{background:#ddf3eb;color:#2f987e}
-#detailDialog.system-flow .background-badge.confirmed{background:#e0f3eb;color:#268e73}
+#detailDialog.system-flow .expanded .background-badge{background:var(--primaryLight,#EAF3FF);color:var(--primary,#2F80ED)}
+#detailDialog.system-flow .background-badge.confirmed{background:var(--primaryLight,#EAF3FF);color:var(--primary,#2F80ED)}
 #detailDialog.system-flow .background-badge.skipped{background:#fff2de;color:#b1874b}
 #detailDialog.system-flow .background-detail{background:#fff;border-radius:11px;display:flex;gap:13px;padding:15px 10px;margin-bottom:7px;align-items:flex-start}
 #detailDialog.system-flow .background-detail>div:last-child{flex:1;min-width:0}
 #detailDialog.system-flow .background-detail p,#detailDialog.system-flow .background-detail b{font-size:12px;line-height:1.7;margin:0 0 12px}
-#detailDialog.system-flow .background-symbol{width:56px;height:56px;background:#eaf8f2;color:#0ba180;border-radius:50%;display:grid;place-items:center;font-size:29px;flex-shrink:0}
+#detailDialog.system-flow .background-symbol{width:56px;height:56px;background:var(--primaryLight,#EAF3FF);color:var(--primary,#2F80ED);border-radius:50%;display:grid;place-items:center;font-size:29px;flex-shrink:0}
 #detailDialog.system-flow .background-path{padding:11px;border-radius:11px;background:#f4f6fa;font-size:10px;line-height:1.7}
 #detailDialog.system-flow .background-path small{display:block;color:#97a0ae;font-size:9px;margin-top:4px}
 #detailDialog.system-flow .background-detail ol{padding-left:20px;font-size:11px;line-height:2.4;color:#63748b}
@@ -107,7 +107,7 @@ body.permission-open>.workspace{filter:blur(4px);pointer-events:none}
 #detailDialog.system-flow .recent-phone{position:relative;width:122px;height:177px;border:4px solid #526a83;border-radius:23px;background:linear-gradient(#dfe9f5,#f7fbff);margin:auto;padding:20px 12px;box-shadow:inset 0 0 0 2px #b5c5d7,0 4px 12px #58708b18}
 #detailDialog.system-flow .recent-phone>small{font-size:8px;color:#6881a1}
 #detailDialog.system-flow .recent-app{background:white;box-shadow:0 0 12px #536b8c2b;border-radius:10px;padding:12px 6px;margin-top:12px;text-align:center;display:grid;gap:7px}
-#detailDialog.system-flow .recent-app i{font-size:26px;color:#0ca783}
+#detailDialog.system-flow .recent-app i{font-size:26px;color:var(--primary,#2F80ED)}
 #detailDialog.system-flow .recent-app b{font-size:9px}
 #detailDialog.system-flow .recent-app>span{color:#b8c6cf;font-size:7px}
 #detailDialog.system-flow .recent-lock{position:absolute;top:51px;right:12px;background:#2a87fa;border:2px solid #fff;color:white;border-radius:50%;width:24px;height:24px;display:grid;place-items:center;font-size:10px}
@@ -117,7 +117,7 @@ body.permission-open>.workspace{filter:blur(4px);pointer-events:none}
 #detailDialog.system-flow .recognition-summary>div:last-child{border-bottom:0}
 #detailDialog.system-flow .recognition-summary i{font-size:18px;width:20px}
 #detailDialog.system-flow .recognition-summary span{flex:1}
-#detailDialog.system-flow .recognition-summary b{font-size:11px;color:#159671;font-weight:500}
+#detailDialog.system-flow .recognition-summary b{font-size:11px;color:var(--primary,#2F80ED);font-weight:500}
 #detailDialog.system-flow .flow-sample{display:flex;gap:16px;align-items:center;padding:17px;background:#edf7ff;border-radius:14px;margin:15px 0}
 #detailDialog.system-flow .flow-sample>i{font-size:33px;color:#337eaa}
 #detailDialog.system-flow .flow-sample b{font-size:14px}
@@ -127,8 +127,8 @@ body.permission-open>.workspace{filter:blur(4px);pointer-events:none}
 #detailDialog.system-flow .flow-progress{display:flex;align-items:center;gap:6px;margin:10px 0 17px}
 #detailDialog.system-flow .flow-progress>span{display:flex;align-items:center;gap:6px;font-size:11px;color:#7b8797;white-space:nowrap}
 #detailDialog.system-flow .flow-progress b{display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#c5cbd4;color:#fff}
-#detailDialog.system-flow .flow-progress>span.done,#detailDialog.system-flow .flow-progress>span.active{color:#249e80}
-#detailDialog.system-flow .flow-progress>span.done b,#detailDialog.system-flow .flow-progress>span.active b{background:linear-gradient(130deg,#2bc7ac,#00966f)}
+#detailDialog.system-flow .flow-progress>span.done,#detailDialog.system-flow .flow-progress>span.active{color:var(--primary,#2F80ED)}
+#detailDialog.system-flow .flow-progress>span.done b,#detailDialog.system-flow .flow-progress>span.active b{background:var(--primary,#2F80ED)}
 #detailDialog.system-flow .flow-progress>i{height:2px;background:#e4e8ed;flex:1}
 #detailDialog.system-flow .system-hero{padding:4px 0 8px;margin:8px 0}
 #detailDialog.system-flow .system-hero-icon{width:60px;height:60px;font-size:29px;margin:0 auto 8px}
@@ -141,7 +141,7 @@ body.permission-open>.workspace{filter:blur(4px);pointer-events:none}
 #detailDialog.system-flow .background-heading{margin:10px 0}
 #detailDialog.system-flow .background-toggle{padding:11px 4px;min-height:48px}
 #detailDialog.system-flow .permission-cta,#detailDialog.system-flow .system-secondary{width:100%;min-height:48px;padding:12px;margin-top:8px;font-size:14px}
-#detailDialog.system-flow .flow-back{display:block;width:100%;min-height:44px;color:#258d76;font-size:12px;margin:0;padding:10px}
+#detailDialog.system-flow .flow-back{display:block;width:100%;min-height:44px;color:var(--primary,#2F80ED);font-size:12px;margin:0;padding:10px}
 #detailDialog.system-flow .flow-tiny{font-size:10px;line-height:1.6;margin:7px 0;color:#69768b}
 #detailDialog.system-flow .center{text-align:center}
 #detailDialog.system-flow .recognition-summary{margin:10px 0;padding:3px 12px}
@@ -161,4 +161,4 @@ body.permission-open>.workspace{filter:blur(4px);pointer-events:none}
 #detailDialog.system-flow .recognition-summary>.background-summary{display:flex;align-items:center;gap:13px;width:100%;min-height:48px;padding:12px 0;background:transparent;color:inherit;text-align:left;font-size:12px}
 #detailDialog.system-flow .background-summary>i:last-child{width:auto;font-size:12px;color:#63718a}
 #detailDialog.system-flow .recognition-summary .needs-check{color:#945319}
-#detailDialog.system-flow .background-summary:focus-visible{outline:2px solid #159671;outline-offset:3px;border-radius:6px}
+#detailDialog.system-flow .background-summary:focus-visible{outline:2px solid var(--primary,#2F80ED);outline-offset:3px;border-radius:6px}

@@ -25,7 +25,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="6dp"
             android:text="花有谱"
-            android:textColor="#4D4845"
+            android:textColor="#1B2633"
             android:textSize="13sp"
             android:textStyle="bold" />
 
@@ -35,7 +35,7 @@
             android:layout_marginStart="4dp"
             android:layout_marginEnd="4dp"
             android:text="·"
-            android:textColor="#928F8B"
+            android:textColor="#5B6B7A"
             android:textSize="13sp" />
 
         <TextView
@@ -46,7 +46,7 @@
             android:ellipsize="end"
             android:singleLine="true"
             android:text="11月5日 · 今天"
-            android:textColor="#928F8B"
+            android:textColor="#5B6B7A"
             android:textSize="12sp" />
 
         <TextView
@@ -84,7 +84,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="今日支出"
-                android:textColor="#928F8B"
+                android:textColor="#5B6B7A"
                 android:textSize="11sp" />
 
             <TextView
@@ -95,7 +95,7 @@
                 android:ellipsize="end"
                 android:singleLine="true"
                 android:text="¥ 0.00"
-                android:textColor="#C9362B"
+                android:textColor="#EB5757"
                 android:textSize="20sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -106,7 +106,7 @@
             android:layout_height="32dp"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
-            android:background="#F4F4F2" />
+            android:background="#E6ECF2" />
 
         <!-- Income Column -->
         <LinearLayout
@@ -119,7 +119,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="今日收入"
-                android:textColor="#928F8B"
+                android:textColor="#5B6B7A"
                 android:textSize="11sp" />
 
             <TextView
@@ -130,7 +130,7 @@
                 android:ellipsize="end"
                 android:singleLine="true"
                 android:text="¥ 0.00"
-                android:textColor="#3D785F"
+                android:textColor="#27AE60"
                 android:textSize="20sp"
                 android:textStyle="bold" />
         </LinearLayout>

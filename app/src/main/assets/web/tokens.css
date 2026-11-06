@@ -16,51 +16,80 @@
 }
 
 :root {
-  /* Text Semantic Tokens */
-  --mf-text-1: #4D4845;
-  --mf-text-2: #65605C;
-  --mf-text-3: #928F8B;
-  --mf-text-disabled: #DBDBD8;
+  /* ==========================================================================
+     Minimal Blue-White Theme Design Tokens (Spec 2.1 - 2.4)
+     ========================================================================== */
+
+  /* 2.1 品牌与交互色 */
+  --primary: #2F80ED;
+  --primaryHover: #1F6FE5;
+  --primaryLight: #EAF3FF;
+  --primarySoft: #F0F6FF;
+  --onPrimary: #FFFFFF;
+
+  /* 2.2 背景与线条 */
+  --background: #F7FAFC;
+  --surface: #FFFFFF;
+  --surfaceSecondary: #F0F6FF;
+  --border: #E6ECF2;
+  --divider: #E6ECF2;
+
+  /* 2.3 文字 */
+  --textPrimary: #1B2633;
+  --textSecondary: #5B6B7A;
+  --textPlaceholder: #9AA8B6;
+  --textDisabled: #BCC7D3;
+  --textOnPrimary: #FFFFFF;
+
+  /* 2.4 财务语义色 */
+  --income: #27AE60;
+  --incomeLight: #EAF8F0;
+  --expense: #EB5757;
+  --expenseLight: #FDEEEE;
+  --warning: #F2994A;
+  --warningLight: #FFF4E8;
+
+  /* ==========================================================================
+     Backward Compatibility Semantic Tokens (Mapping to Blue-White Spec)
+     ========================================================================== */
+  --mf-text-1: var(--textPrimary);
+  --mf-text-2: var(--textSecondary);
+  --mf-text-3: var(--textPlaceholder);
+  --mf-text-disabled: var(--textDisabled);
   --mf-text-inverse: #FFFFFF;
 
-  /* Surface & Fill Tokens */
-  --mf-surface-1: #FFFFFF;
-  --mf-surface-2: #F6F6F4;
-  --mf-surface-3: #EFEFED;
-  --mf-overlay: rgba(0, 0, 0, 0.17);
+  --mf-surface-1: var(--surface);
+  --mf-surface-2: var(--background);
+  --mf-surface-3: #EDF2F7;
+  --mf-overlay: rgba(27, 38, 51, 0.25);
 
-  /* Border Tokens */
-  --mf-border-1: #F4F4F2;
-  --mf-border-2: #E7E7E4;
+  --mf-border-1: var(--border);
+  --mf-border-2: #D9E2EC;
 
-  /* Icon Tokens */
-  --mf-icon-1: #4D4845;
-  --mf-icon-2: #A6A4A0;
+  --mf-icon-1: var(--textPrimary);
+  --mf-icon-2: var(--textSecondary);
 
-  /* Accents */
-  /* Verdant (Brand Primary) */
-  --mf-verdant: #4E886F;
-  --mf-verdant-strong: #3D785F;
-  --mf-verdant-text: #215B44;
-  --mf-verdant-bg: #F3F7F5;
+  /* Primary Accent: Blue */
+  --mf-verdant: var(--primary);
+  --mf-verdant-strong: var(--primaryHover);
+  --mf-verdant-text: var(--primary);
+  --mf-verdant-bg: var(--primaryLight);
 
-  /* Ruby (Expense / Delete) */
-  --mf-ruby: #F55D3E;
-  --mf-ruby-text: #C9362B;
-  --mf-ruby-bg: #FFF4F1;
+  /* Expense / Negative */
+  --mf-ruby: var(--expense);
+  --mf-ruby-text: var(--expense);
+  --mf-ruby-bg: var(--expenseLight);
 
-  /* Ember (Accent / Progress) */
-  --mf-ember: #FD8240;
-  --mf-ember-bg: #FFF4F0;
+  /* Warning & Soft Accents */
+  --mf-ember: var(--primary);
+  --mf-ember-bg: var(--primaryLight);
 
-  /* Sandstone */
-  --mf-sand: #F0AB59;
-  --mf-sand-text: #976035;
-  --mf-sand-bg: #FDF6E4;
+  --mf-sand: #56A3FF;
+  --mf-sand-text: var(--primary);
+  --mf-sand-bg: var(--primarySoft);
 
-  /* Marigold */
-  --mf-gold: #FAA800;
-  --mf-gold-bg: #FFF5E3;
+  --mf-gold: var(--warning);
+  --mf-gold-bg: var(--warningLight);
 
   /* Spacing */
   --sp-1: 4px;
@@ -75,74 +104,75 @@
   /* Radius */
   --r-bar: 4px;
   --r-box: 8px;
-  --r-card: 12px;
+  --r-input: 12px;
+  --r-btn: 12px;
+  --r-card: 16px;
   --r-pill: 24px;
   --r-round: 100px;
 
   /* Typography Font Stack */
   --font: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
-  --shadow-float: 0px 8px 16px rgba(26, 26, 26, 0.08), 0px 4px 6px rgba(26, 26, 26, 0.08), 0px 1px 2px rgba(26, 26, 26, 0.12);
+  --shadow-float: 0px 4px 12px rgba(27, 38, 51, 0.06);
 
   /* Legacy Compatibility Variables */
-  --green: var(--mf-verdant);
-  --ink: var(--mf-text-1);
-  --muted: var(--mf-text-3);
-  --page: var(--mf-surface-1);
-  --surface: var(--mf-surface-1);
-  --line: var(--mf-border-1);
+  --green: var(--primary);
+  --ink: var(--textPrimary);
+  --muted: var(--textSecondary);
+  --page: var(--background);
+  --line: var(--border);
 }
 
 /* Typography Hierarchy Utilities */
-.t-large-title { font-family: var(--font); font-size: 32px; line-height: 48px; font-weight: 400; }
-.t-title { font-family: var(--font); font-size: 24px; line-height: 36px; font-weight: 500; }
-.t-body-m { font-family: var(--font); font-size: 16px; line-height: 24px; font-weight: 500; }
-.t-sub-m { font-family: var(--font); font-size: 14px; line-height: 20px; font-weight: 500; }
-.t-foot { font-family: var(--font); font-size: 12px; line-height: 16px; font-weight: 400; }
-.t-foot-m { font-family: var(--font); font-size: 12px; line-height: 16px; font-weight: 500; }
-.t-caption { font-family: var(--font); font-size: 10px; line-height: 14px; font-weight: 400; }
+.t-large-title { font-family: var(--font); font-size: 32px; line-height: 48px; font-weight: 600; color: var(--textPrimary); }
+.t-title { font-family: var(--font); font-size: 24px; line-height: 36px; font-weight: 600; color: var(--textPrimary); }
+.t-body-m { font-family: var(--font); font-size: 16px; line-height: 24px; font-weight: 500; color: var(--textPrimary); }
+.t-sub-m { font-family: var(--font); font-size: 14px; line-height: 20px; font-weight: 500; color: var(--textSecondary); }
+.t-foot { font-family: var(--font); font-size: 12px; line-height: 16px; font-weight: 400; color: var(--textPlaceholder); }
+.t-foot-m { font-family: var(--font); font-size: 12px; line-height: 16px; font-weight: 500; color: var(--textSecondary); }
+.t-caption { font-family: var(--font); font-size: 10px; line-height: 14px; font-weight: 400; color: var(--textPlaceholder); }
 
 /* Reusable Components */
 .mf-section {
-  background: var(--mf-surface-1);
+  background: var(--surface);
   padding: var(--sp-6) var(--sp-5);
   display: flex;
   flex-direction: column;
   gap: var(--sp-5);
 }
 .mf-section.alt {
-  background: var(--mf-surface-2);
+  background: var(--background);
 }
 .mf-pill {
   display: inline-flex;
   align-items: center;
   gap: var(--sp-1);
-  padding: 8px 12px;
+  padding: 6px 12px;
   border-radius: var(--r-pill);
-  background: var(--mf-surface-2);
-  color: var(--mf-text-1);
+  background: var(--primarySoft);
+  color: var(--primary);
   font-family: var(--font);
   font-size: 12px;
   line-height: 16px;
   font-weight: 500;
-  border: none;
+  border: 1px solid var(--primaryLight);
 }
 .mf-icon-40 {
   width: 40px;
   height: 40px;
   flex: 0 0 40px;
   border-radius: var(--r-round);
-  background: #FFFFFF;
-  border: 1px solid var(--mf-border-1);
+  background: var(--surface);
+  border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--mf-icon-1);
+  color: var(--textPrimary);
 }
 .mf-progress {
   position: relative;
-  height: 4px;
+  height: 6px;
   border-radius: var(--r-bar);
-  background: rgba(253, 130, 64, 0.25);
+  background: var(--primaryLight);
   overflow: hidden;
 }
 .mf-progress > i {
@@ -151,22 +181,22 @@
   left: 0;
   bottom: 0;
   border-radius: var(--r-bar);
-  background: var(--mf-ember);
+  background: var(--primary);
 }
 .mf-progress.over {
-  background: rgba(245, 93, 62, 0.25);
+  background: var(--expenseLight);
 }
 .mf-progress.over > i {
-  background: var(--mf-ruby);
+  background: var(--expense);
 }
 
 /* Category Accent Icon Colors */
-.mf-icon-verdant { color: var(--mf-verdant-strong); }
-.mf-icon-ruby { color: var(--mf-ruby-text); }
-.mf-icon-ember { color: var(--mf-ember); }
-.mf-icon-sand { color: var(--mf-sand-text); }
-.mf-icon-gold { color: var(--mf-gold); }
-.mf-icon-primary { color: var(--mf-icon-1); }
+.mf-icon-verdant { color: var(--primary); }
+.mf-icon-ruby { color: var(--expense); }
+.mf-icon-ember { color: #56A3FF; }
+.mf-icon-sand { color: #2F80ED; }
+.mf-icon-gold { color: var(--warning); }
+.mf-icon-primary { color: var(--textPrimary); }
 
 /* Budget Display Card Utilities */
 .mf-budget-summary {
@@ -184,17 +214,17 @@
   font-family: var(--font);
   font-size: 32px;
   line-height: 1.25;
-  font-weight: 400;
-  color: var(--mf-text-1);
+  font-weight: 600;
+  color: var(--textPrimary);
 }
 .mf-budget-remaining.over {
-  color: var(--mf-ruby-text);
+  color: var(--expense);
 }
 .mf-budget-sub {
   display: flex;
   justify-content: space-between;
-  font-size: 12px;
-  color: var(--mf-text-3);
+  font-size: 13px;
+  color: var(--textSecondary);
   font-family: var(--font);
 }
 

@@ -142,7 +142,7 @@ internal class EmbeddedModelPage(
         val startAlpha=contentAlpha
         if(!ValueAnimator.areAnimatorsEnabled()) {
             current=RectF(end);radius=toRadius;dim=1f;contentAlpha=1f
-            stage.setBackgroundColor(0x38204434)
+            stage.setBackgroundColor(0x381B2633)
             page.visibility=View.VISIBLE;page.alpha=1f;page.clipBounds=null;page.clipToOutline=false
             surface.visibility=View.GONE
             if(reverse)finish()
@@ -162,7 +162,7 @@ internal class EmbeddedModelPage(
                 val lower=if(reverse)radius*p else radius*(1-p)
                 (surface.background as GradientDrawable).cornerRadii=floatArrayOf(radius,radius,radius,radius,lower,lower,lower,lower)
                 dim=startDim+((if(reverse)0f else 1f)-startDim)*p
-                stage.setBackgroundColor(Color.argb((56*dim).toInt(),32,68,52))
+                stage.setBackgroundColor(Color.argb((56*dim).toInt(),27,38,51))
                 contentAlpha=if(reverse)startAlpha*(1-p) else startAlpha+(1-startAlpha)*((p-.08f)/.65f).coerceIn(0f,1f)
                 page.alpha=contentAlpha
                 // Reveal the real, unscaled content inside the changing surface. Text

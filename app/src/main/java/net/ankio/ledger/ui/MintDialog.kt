@@ -73,7 +73,7 @@ class MintDialog(val context: Context, title: String, subtitle: String = "") {
     fun showEmbedded(activity:MainActivity,origin:RectF?,originRadius:Float?=null,pageTag:String="embedded-panel-page") {
         (root.parent as? android.view.ViewGroup)?.removeView(root)
         root.tag=pageTag
-        root.addView(View(context).apply { background=shape(Color.rgb(196,217,206),2);importantForAccessibility=View.IMPORTANT_FOR_ACCESSIBILITY_NO },0,LinearLayout.LayoutParams(dp(30),dp(4)).apply { gravity=Gravity.CENTER_HORIZONTAL;bottomMargin=dp(8) })
+        root.addView(View(context).apply { background=shape(Color.rgb(201,208,218),2);importantForAccessibility=View.IMPORTANT_FOR_ACCESSIBILITY_NO },0,LinearLayout.LayoutParams(dp(30),dp(4)).apply { gravity=Gravity.CENTER_HORIZONTAL;bottomMargin=dp(8) })
         (root.background as GradientDrawable).cornerRadii=floatArrayOf(dp(30).toFloat(),dp(30).toFloat(),dp(30).toFloat(),dp(30).toFloat(),0f,0f,0f,0f)
         root.setOnApplyWindowInsetsListener(null)
         embedded=EmbeddedModelPage(activity,root,origin,originRadius) { embedded=null;embeddedDismiss?.invoke() }
@@ -95,7 +95,7 @@ class MintDialog(val context: Context, title: String, subtitle: String = "") {
     fun button(value: String, primary: Boolean = false) = Button(context).apply {
         text = value; textSize = 14f; isAllCaps = false; minHeight = dp(48); minimumHeight = dp(48)
         setPadding(dp(12),dp(8),dp(12),dp(8)); setTextColor(if(primary)Color.WHITE else GREEN)
-        background = RippleDrawable(ColorStateList.valueOf(0x25308060),shape(if(primary)GREEN else PALE,if(primary)20 else 12),shape(Color.WHITE,if(primary)20 else 12))
+        background = RippleDrawable(ColorStateList.valueOf(0x252F80ED),shape(if(primary)GREEN else PALE,if(primary)20 else 12),shape(Color.WHITE,if(primary)20 else 12))
         backgroundTintList = null
         stateListAnimator = null
     }
@@ -117,11 +117,11 @@ class MintDialog(val context: Context, title: String, subtitle: String = "") {
         }
     }
     companion object {
-        val GREEN = Color.rgb(78, 136, 111)
-        val PALE = Color.rgb(243, 247, 245)
-        val INK = Color.rgb(77, 72, 69)
-        val MUTED = Color.rgb(146, 143, 139)
-        val LINE = Color.rgb(244, 244, 242)
+        val GREEN = Color.rgb(47, 128, 237)
+        val PALE = Color.rgb(234, 243, 255)
+        val INK = Color.rgb(27, 38, 51)
+        val MUTED = Color.rgb(91, 107, 122)
+        val LINE = Color.rgb(230, 236, 242)
         fun confirm(context: Context, title: String, message: String, positive: String, onConfirm: () -> Unit) {
             val sheet = MintDialog(context,title)
             sheet.content.addView(sheet.text(message,14,MUTED))

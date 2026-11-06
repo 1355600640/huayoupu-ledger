@@ -544,7 +544,7 @@ function showBudgetSheet(){
 let manualType='expense',manualCategory='餐饮',statsType='expense',rankingType='expense',assetsHidden=false;
 const expenseCategories=[['餐饮','utensils'],['交通','bus'],['购物','bag-shopping'],['娱乐','gamepad'],['居住','house'],['医疗','plus'],['教育','graduation-cap'],['服饰','shirt'],['日用','basket-shopping'],['通讯','phone'],['人情','gift'],['其他','ellipsis']];
 const incomeCategories=[['工资','wallet'],['奖金','award'],['礼物','gift'],['退款','rotate-left'],['其他收入','ellipsis']];
-const chartColors=['#4E886F','#FD8240','#F0AB59','#F55D3E','#FAA800','#A6A4A0'];
+const chartColors=['#2F80ED','#56A3FF','#27AE60','#F2994A','#9B51E0','#EB5757','#8BC1FF','#A8B9CC'];
 function categoryOptions(){return [...(manualType==='income'?incomeCategories:expenseCategories),...(customCategories[manualType]||[]).map(name=>[name,'tag'])]}
 function beginManual(reset=true){
  if(manualOpen)return;if(manualClosing)closeManual(false);closeSheet(false);if(recordPanelOpen)closeRecordPanel(false);
