@@ -634,32 +634,43 @@ $('manual-shade').onclick=()=>closeManual();
 $('manual').querySelector('.back').onclick=()=>manualOpen?closeManual():go('ledger');
 function clearManualAmount(){$('manual-amount').value='';updateSaveButtonState();remember()}
 function manualKey(key){
- const input=$('manual-amount');let value=input.value.trim();
+ const input=$('manual-amount');let value=input.value;
  if(key==='='){
   if(/[+\-]/.test(value)){
    const evaluated=evalManualExpr(value);
    if(evaluated>=0)value=evaluated.toFixed(2).replace(/\.?0+$/,'');
   }
  }else if(key==='backspace'){
-  if(value.endsWith(' + ')||value.endsWith(' - '))value=value.slice(0,-3);
+  if(/\s*[+\-]\s*$/.test(value))value=value.replace(/\s*[+\-]\s*$/,'');
   else value=value.slice(0,-1);
  }else if(key==='+'||key==='-'){
-  if(!value)return;
-  if(value.endsWith(' + ')||value.endsWith(' - '))value=value.slice(0,-3)+` ${key} `;
-  else if(/[+\-]/.test(value)){
+  if(!value.trim())return;
+  if(/\s*[+\-]\s*$/.test(value))value=value.replace(/\s*[+\-]\s*$/,` ${key} `);
+  else if(/[+\-]/.test(value.trim())){
    const evaluated=evalManualExpr(value);
    if(evaluated>=0)value=evaluated.toFixed(2).replace(/\.?0+$/,'')+` ${key} `;
-  }else value=value+` ${key} `;
+  }else value=value.trim()+` ${key} `;
  }else if(key==='.'){
   const parts=value.split(/[+\-]/),cur=parts[parts.length-1].trim();
   if(cur.includes('.'))return;
-  value=value+(cur?'.':'0.');
+  if(!cur){
+   if(/[+\-]$/.test(value))value=value+' 0.';
+   else if(value.endsWith(' '))value=value+'0.';
+   else value=value+(value?' 0.':'0.');
+  }else value=value+'.';
  }else{
   const parts=value.split(/[+\-]/),cur=parts[parts.length-1].trim();
   if(cur.length>=10)return;
   if(cur.includes('.')&&cur.split('.')[1].length>=2)return;
-  if(cur==='0'&&key!=='.')value=value.slice(0,-1)+key;
-  else value=value+key;
+  if(!cur){
+   if(/[+\-]$/.test(value))value=value+' '+key;
+   else if(value.endsWith(' '))value=value+key;
+   else value=value+(value?' ':'')+key;
+  }else if(cur==='0'){
+   value=value.slice(0,-1)+key;
+  }else{
+   value=value+key;
+  }
  }
  input.value=value;updateSaveButtonState();remember();
 }

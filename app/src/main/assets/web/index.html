@@ -241,7 +241,7 @@
       </div>
       <p id="refund-summary" class="refund-summary" hidden=""></p>
       <div class="form-row edit note-row">
-       <i class="fa-regular fa-address-book">
+       <i class="fa-regular fa-pen-to-square">
        </i>
        <label for="note">
         备注
@@ -410,7 +410,7 @@
        <span>
         ¥
        </span>
-       <input aria-label="金额" id="manual-amount" inputmode="decimal" maxlength="14" placeholder="0.00" type="text"/>
+       <input aria-label="金额" id="manual-amount" inputmode="decimal" maxlength="30" placeholder="0.00" type="text"/>
        <button aria-label="清空金额" onclick="clearManualAmount()" type="button">
         ×
        </button>
@@ -702,11 +702,12 @@
    </div>
   </section>
   <dialog id="sheet">
+   <div aria-hidden="true" class="sheet-grip"></div>
    <div class="sheet-heading">
     <h2 id="sheet-title">
     </h2>
     <button aria-label="关闭" onclick="closeSheet()">
-     ×
+     <i aria-hidden="true" class="fa-solid fa-xmark"></i>
     </button>
    </div>
    <div id="sheet-content">
@@ -716,7 +717,7 @@
   <div class="toast" role="status">
   </div>
   <div hidden id="manual-shade"></div>
-  <section hidden id="manual-panel" role="dialog" aria-modal="true" aria-label="手动记账" tabindex="-1"><div class="manual-panel-content"></div></section>
+  <section hidden id="manual-panel" role="dialog" aria-modal="true" aria-label="手动记账" tabindex="-1"><div aria-hidden="true" class="page-grip"></div><div class="manual-panel-content"></div></section>
   <script src="fluid-motion.js"></script>
   <script src="panel-focus.js"></script>
   <script src="vendor/flatpickr/flatpickr.min.js"></script>
