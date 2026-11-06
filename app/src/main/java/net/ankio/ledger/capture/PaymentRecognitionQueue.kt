@@ -38,7 +38,7 @@ class PaymentRecognitionQueue(private val app:LedgerApp,
                     val result=factory().processPrepared(image,Source.OCR,pkg,id,::allowed)
                     if(allowed()) {
                         var message=completedMessage(id,result)
-                        if(message.startsWith("已记账 ¥") && app.tasks.recordId(id)?.let { app.captureHealth.successful(it,pkg) }!=true)
+                        if(isRecorded(message) && app.tasks.recordId(id)?.let { app.captureHealth.successful(it,pkg) }!=true)
                             message="账单已移除，未新增记账"
                         feedback(message,false)
                     }
@@ -72,15 +72,16 @@ class PaymentRecognitionQueue(private val app:LedgerApp,
                 record==null || result is IngestResult.Saved && result.record.id!=linked -> "账单已移除，未新增记账"
                 record.state==net.ankio.ledger.core.RecordState.REVIEW -> "金额待核对，请打开账单"
                 record.state!=net.ankio.ledger.core.RecordState.POSTED || record.bill.amountCents==null -> "账单未入账，请重试"
-                else -> "已记账 ¥${net.ankio.ledger.core.Money.format(record.bill.amountCents!!)}"
+                else -> "已记录账单，${net.ankio.ledger.core.Money.formatDisplay(record.bill.amountCents!!)} 元"
             }
         }
         IngestResult.Ignored -> "未识别到金额，请重试"
         is IngestResult.Skipped -> result.message
     }
+    private fun isRecorded(message:String)=message.startsWith("已记录账单") || message.startsWith("已记账")
     private fun deliver(id:Long,message:String,loading:Boolean) {
-        val linked=if(!loading && message.startsWith("已记账 ¥"))app.tasks.recordId(id)?.takeIf { app.store.get(it)!=null } else null
-        val display=if(!loading && message.startsWith("已记账 ¥") && linked==null)"账单已移除，未新增记账" else message
+        val linked=if(!loading && isRecorded(message))app.tasks.recordId(id)?.takeIf { app.store.get(it)!=null } else null
+        val display=if(!loading && isRecorded(message) && linked==null)"账单已移除，未新增记账" else message
         val service=ScreenCaptureService.current
         if(service!=null)service.showQueuedFeedback(display,loading,linked)
         else { app.channels.status(display);app.changed() }

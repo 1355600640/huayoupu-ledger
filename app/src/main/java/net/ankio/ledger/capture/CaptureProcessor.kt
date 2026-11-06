@@ -27,7 +27,7 @@ class CaptureProcessor(private val app: LedgerApp, private val client: OcrClient
         return client.recognizePrepared(image,onPrepared=prepared,stillAllowed=guard,livePaymentAt=liveAt,expenseOnly=expenseOnly,origin=origin)
     }
 
-    private fun recordedMessage(cents:Long?)=if(cents==null)"已记账" else "已记账 ¥${net.ankio.ledger.core.Money.format(cents)}"
+    private fun recordedMessage(cents:Long?)=if(cents==null)"已记录账单" else "已记录账单，${net.ankio.ledger.core.Money.formatDisplay(cents)} 元"
 
     private suspend fun processRecognition(source:Source,origin:String,taskId:Long?,beforeAccept:suspend ()->Unit,allowed:()->Boolean,
         recognize:suspend (()->Boolean)->net.ankio.ledger.ocr.RecognitionResult):IngestResult {

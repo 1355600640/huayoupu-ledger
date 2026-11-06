@@ -15,11 +15,28 @@ object DuplicateDetector {
         }
         if (exact != null) return Duplicate.Exact(exact.id)
         if (bill.amountCents == null || bill.direction == null) return Duplicate.None
-        // Import time is not transaction time. It cannot establish proximity to today's purchases.
-        if (capture.source in imageSources && !bill.timeExplicit) return Duplicate.None
         val merchant = normalizedMerchant(bill.merchant)
         val usableMerchant = !genericMerchant(bill.merchant)
         val currentText = normalize(capture.text).trim()
+
+        // Live OCR pair (e.g. payment_auto and shake, or repeated shakes on the same screen)
+        val liveOcrExact = existing.firstOrNull { old ->
+            if (capture.source != Source.OCR || old.source != Source.OCR) return@firstOrNull false
+            if (bill.amountCents != old.amountCents || bill.direction != old.direction) return@firstOrNull false
+            if (abs(bill.occurredAt - old.occurredAt) > 120_000L) return@firstOrNull false
+            val oldProvider = identityScope(Capture(old.source, old.origin, old.text))
+            val sameProvider = currentProvider != null && currentProvider == oldProvider
+            if (!sameProvider) return@firstOrNull false
+            val sameMerchant = (usableMerchant && merchant == normalizedMerchant(old.merchant)) ||
+                (genericMerchant(bill.merchant) && genericMerchant(old.merchant)) ||
+                (old.origin == capture.origin && normalize(old.text).trim() == currentText)
+            val conflictTx = bill.transactionId != null && old.transactionId != null && bill.transactionId != old.transactionId
+            sameMerchant && !conflictTx
+        }
+        if (liveOcrExact != null) return Duplicate.Exact(liveOcrExact.id)
+
+        // Import time is not transaction time. It cannot establish proximity to today's purchases.
+        if (capture.source in imageSources && !bill.timeExplicit) return Duplicate.None
         val possible = existing.firstOrNull { old ->
             if (bill.amountCents != old.amountCents || bill.direction != old.direction ||
                 abs(bill.occurredAt - old.occurredAt) > 120_000L ||

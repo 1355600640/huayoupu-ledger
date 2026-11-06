@@ -24,6 +24,13 @@ object Money {
 
     fun format(cents: Long): String = java.math.BigDecimal.valueOf(cents, 2)
         .setScale(2).toPlainString()
+
+    fun formatDisplay(cents: Long): String {
+        val yuan = java.math.BigDecimal.valueOf(cents, 2)
+        val symbols = java.text.DecimalFormatSymbols(Locale.CHINA)
+        val pattern = if (cents % 100 == 0L) "#,##0" else if (cents % 10 == 0L) "#,##0.0" else "#,##0.00"
+        return java.text.DecimalFormat(pattern, symbols).format(yuan)
+    }
 }
 
 internal fun normalize(text: String): String = Normalizer.normalize(text, Normalizer.Form.NFKC)

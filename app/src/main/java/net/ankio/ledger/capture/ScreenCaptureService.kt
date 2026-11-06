@@ -280,7 +280,8 @@ open class ScreenCaptureService:AccessibilityService() {
                 ledger.tasks.diagnose(task,"window_details",windowDetails.toList().takeLast(2).joinToString(" | "))
                 val feedbackTask=task
                 enqueued=ledger.captureQueue.enqueue(task,pkg,automatic,processorFactory) { message,loading ->
-                    feedback(message,loading,if(!loading && message.startsWith("已记账"))ledger.tasks.recordId(feedbackTask) else null)
+                    val isRecorded = message.startsWith("已记录账单") || message.startsWith("已记账")
+                    feedback(message,loading,if(!loading && isRecorded)ledger.tasks.recordId(feedbackTask) else null)
                 }
                 if(!enqueued)throw RecognitionException("识别任务较多，请稍后重新摇一摇补录")
                 ledger.changed()

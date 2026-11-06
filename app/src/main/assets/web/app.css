@@ -257,3 +257,25 @@ html,body{height:100%;overscroll-behavior:none}body.native-app{background:var(--
 .cmp-month-item.active{background:var(--mf-verdant)!important;color:#fff!important;border-color:var(--mf-verdant)!important;font-weight:600;box-shadow:0 4px 12px rgba(78,136,111,.32)}
 .cmp-selected-hint{text-align:center;font-size:13px;color:var(--mf-text-3);margin-top:-2px}
 .cmp-selected-hint b{color:var(--mf-verdant);font-weight:600;margin-left:4px}
+
+/* Mini Finance Theme for Flatpickr */
+.flatpickr-calendar{width:100%!important;max-width:340px;margin:0 auto;box-shadow:none!important;border:1px solid var(--mf-border-1);border-radius:var(--r-card);background:var(--mf-surface-1);font-family:inherit}
+.flatpickr-calendar.inline{display:block}
+.flatpickr-months{background:var(--mf-surface-2);border-radius:15px 15px 0 0;padding:6px 4px}
+.flatpickr-months .flatpickr-month{color:var(--mf-text-1)}
+.flatpickr-current-month{font-size:16px;font-weight:600;color:var(--mf-text-1);padding-top:4px}
+.flatpickr-current-month .cur-month,.flatpickr-current-month input.cur-year{font-weight:600;color:var(--mf-text-1)}
+.flatpickr-prev-month svg,.flatpickr-next-month svg{fill:var(--mf-text-1)}
+.flatpickr-weekdays{background:var(--mf-surface-2)}
+span.flatpickr-weekday{color:var(--mf-text-3);font-size:13px;font-weight:500}
+.flatpickr-day{border-radius:12px!important;color:var(--mf-text-1);font-size:14px;font-weight:500;height:38px;line-height:38px}
+.flatpickr-day.today{border-color:var(--mf-verdant)!important;color:var(--mf-verdant)}
+.flatpickr-day.selected,.flatpickr-day.selected:hover{background:var(--mf-verdant)!important;border-color:var(--mf-verdant)!important;color:#fff!important;font-weight:600}
+.flatpickr-day:hover{background:var(--mf-surface-2)}
+.flatpickr-monthSelect-months{margin:10px 0}
+.flatpickr-monthSelect-month{border-radius:12px!important;padding:10px 4px!important;font-size:14px;font-weight:500;color:var(--mf-text-1)}
+.flatpickr-monthSelect-month.selected{background:var(--mf-verdant)!important;color:#fff!important;font-weight:600}
+.flatpickr-monthSelect-month:hover{background:var(--mf-surface-2)}
+.dp-tabs{display:flex;gap:8px;background:var(--mf-surface-2);padding:4px;border-radius:var(--r-pill);margin-bottom:12px}
+.dp-tab{flex:1;padding:8px 12px;font-size:13px;font-weight:500;border-radius:var(--r-pill);color:var(--mf-text-2);background:transparent;border:none;cursor:pointer;transition:all .15s ease}
+.dp-tab.active{background:#fff;color:var(--mf-text-1);font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.06)}

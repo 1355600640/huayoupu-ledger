@@ -45,13 +45,31 @@ class RecognitionBanner(private val service:Context) {
                     flags=android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
                 }
             }
-            if(onRepair!=null)row.setOnClickListener { removeNow();onRepair() }
-            else if(openIntent!=null)row.setOnClickListener { removeNow();runCatching { service.startActivity(openIntent) } }
+            val clickListener = if(onRepair!=null) {
+                View.OnClickListener { removeNow();onRepair() }
+            } else if(openIntent!=null) {
+                View.OnClickListener { removeNow();runCatching { service.startActivity(openIntent) } }
+            } else null
+
+            if(clickListener!=null) {
+                row.isClickable = true
+                row.setOnClickListener(clickListener)
+            }
             if(onRepair!=null || openIntent!=null)row.contentDescription=if(onRepair!=null)"$display，点击补齐设置" else "$display，点击查看账单"
             if(loading) row.addView(ProgressBar(service).apply {
                 indeterminateTintList=android.content.res.ColorStateList.valueOf(Color.WHITE)
             },LinearLayout.LayoutParams(dp(20),dp(20)).apply { rightMargin=dp(10) })
-            row.addView(TextView(service).apply { text=display;textSize=14f;setTextColor(Color.WHITE);setSingleLine(true);ellipsize=android.text.TextUtils.TruncateAt.END;maxWidth=service.resources.displayMetrics.widthPixels-dp(104) },LinearLayout.LayoutParams(-2,-2))
+            val textView = TextView(service).apply {
+                text=display;textSize=14f;setTextColor(Color.WHITE);setSingleLine(true);ellipsize=android.text.TextUtils.TruncateAt.END;maxWidth=service.resources.displayMetrics.widthPixels-dp(104)
+                if(clickListener!=null) setOnClickListener(clickListener)
+            }
+            row.addView(textView,LinearLayout.LayoutParams(-2,-2))
+            if(openIntent!=null) {
+                row.addView(TextView(service).apply {
+                    text=" ›";textSize=14f;setTextColor(0xb3ffffff.toInt())
+                    if(clickListener!=null) setOnClickListener(clickListener)
+                },LinearLayout.LayoutParams(-2,-2))
+            }
             val params=WindowManager.LayoutParams(-2,-2,WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or if(onRepair==null && openIntent==null)WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE else 0,
                 android.graphics.PixelFormat.TRANSLUCENT).apply { gravity=Gravity.TOP or Gravity.CENTER_HORIZONTAL;y=dp(16) }
@@ -78,7 +96,7 @@ class RecognitionBanner(private val service:Context) {
         }
     }
     private fun compactMessage(message:String):String=when {
-        message.startsWith("已记账 ¥") -> message
+        message.startsWith("已记录账单") || message.startsWith("已记账") -> message
         "全额退款" in message -> "已全额退款，不予记账"
         "这是退款记录" in message || message==net.ankio.ledger.core.StandaloneRefundReceipt.MESSAGE -> "退款记录，不予记账"
         "无法确认账单窗口" in message -> "请收起浮层后重试"

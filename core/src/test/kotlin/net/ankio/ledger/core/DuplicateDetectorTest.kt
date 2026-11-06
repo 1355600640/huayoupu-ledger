@@ -5,6 +5,18 @@ import org.junit.Test
 
 /** All examples below are synthetic transactions. */
 class DuplicateDetectorTest {
+    @Test fun liveOcrShakeAndAutoPaymentDoNotDuplicateEvenWithoutExplicitTime() {
+        val autoCapture = Capture(Source.OCR, "payment_auto:com.eg.android.alipaygphone", "支付宝 支付成功 示例咖啡店 -28.50", now)
+        val autoBill = bill.copy(timeExplicit = false, amountCents = 2850, merchant = "示例咖啡店")
+        val old = existing(source = Source.OCR, origin = autoCapture.origin, text = autoCapture.text,
+            time = now, amount = 2850, merchant = "示例咖啡店").copy(timeExplicit = false)
+
+        val shakeCapture = Capture(Source.OCR, "shake:com.eg.android.alipaygphone", "支付宝 支付成功 示例咖啡店 -28.50", now + 5_000)
+        val shakeBill = bill.copy(timeExplicit = false, amountCents = 2850, merchant = "示例咖啡店")
+
+        assertEquals(Duplicate.Exact(7), DuplicateDetector.find(shakeCapture, shakeBill, listOf(old)))
+    }
+
     @Test fun repeatedShoppingOrderIsExactAcrossCaptureTimesOnlyWithinItsApplication() {
         val c=Capture(Source.OCR,"com.taobao.taobao","订单信息",now)
         val b=bill.copy(transactionId="512786188900737738",timeExplicit=false)

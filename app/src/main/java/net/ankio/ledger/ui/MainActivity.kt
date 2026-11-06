@@ -189,7 +189,7 @@ class MainActivity : Activity() {
                         val amount=persisted.bill.amountCents
                         if(persisted.state==RecordState.POSTED && amount!=null) {
                             ledger.captureHealth.successful(persisted.id,"image")
-                            message("已记账 ¥${net.ankio.ledger.core.Money.format(amount)}")
+                            message("已记录账单，${net.ankio.ledger.core.Money.formatDisplay(amount)} 元")
                         } else message("金额待核对")
                     }
                     IngestResult.DuplicateSkipped -> { dispatch("importStatus", "{\"working\":false}"); message("识别完成，请查看账本") }

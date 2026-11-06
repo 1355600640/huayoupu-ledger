@@ -357,37 +357,107 @@ document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{filter=b.da
 document.querySelectorAll('[data-channel]').forEach(s=>s.onclick=()=>setChannel(s.dataset.channel,s.getAttribute('aria-checked')!=='true'));
 $('month').onclick=()=>{
  let [selYear,selMonth]=month.split('-').map(Number);
- const now=new Date(),curYear=now.getFullYear(),curMonth=now.getMonth()+1;
- const monthLabels=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
- showSheet('选择账本日期',`<div class="cmp-container"><div class="cmp-header"><button type="button" class="cmp-nav-btn" id="cmp-prev-year" aria-label="上一年"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button><div class="cmp-year-label"><span id="cmp-year-val">${selYear}</span><span class="cmp-unit">年</span></div><button type="button" class="cmp-nav-btn" id="cmp-next-year" aria-label="下一年"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button></div><div class="cmp-grid" id="cmp-month-grid"></div><div class="cmp-selected-hint">当前选择：<b id="cmp-selected-text">${selYear}年${selMonth}月</b></div><div class="sheet-actions"><button type="button" id="cmp-this-month">本月</button><button type="button" class="primary" id="month-apply">确定</button></div></div>`);
- const updateUI=()=>{
-  $('cmp-year-val').textContent=selYear;
-  $('cmp-selected-text').textContent=`${selYear}年${selMonth}月`;
-  $('cmp-month-grid').innerHTML=monthLabels.map((lbl,idx)=>{
-   const m=idx+1,isActive=selMonth===m,isCur=selYear===curYear&&curMonth===m;
-   return `<button type="button" class="cmp-month-item ${isActive?'active':''} ${isCur?'current':''}" data-m="${m}">${lbl}</button>`;
-  }).join('');
-  $('cmp-month-grid').querySelectorAll('.cmp-month-item').forEach(btn=>{
-   btn.onclick=()=>{
-    const m=Number(btn.dataset.m);
-    if(selMonth===m){$('month-apply').click();return}
-    selMonth=m;
-    updateUI();
-   };
-  });
+ let activeTab='month';
+ let fpInstance=null;
+ showSheet('选择账本日期',`<div class="date-picker-modal"><div class="dp-tabs"><button type="button" class="dp-tab active" id="dp-tab-month">按月份选择</button><button type="button" class="dp-tab" id="dp-tab-day">按日历选择</button></div><div id="dp-calendar-box" style="min-height:280px;display:flex;justify-content:center"></div><div class="cmp-selected-hint" style="margin-top:10px">当前选择：<b id="dp-selected-text">${selYear}年${selMonth}月</b></div><div class="sheet-actions"><button type="button" id="dp-this-month">本月</button><button type="button" class="primary" id="month-apply">确定</button></div></div>`);
+ const initPicker=()=>{
+  if(fpInstance){fpInstance.destroy();fpInstance=null}
+  const container=$('dp-calendar-box');
+  container.innerHTML='<input type="text" id="dp-flatpickr-input" style="display:none"/>';
+  if(activeTab==='month' && window.monthSelectPlugin){
+   fpInstance=flatpickr('#dp-flatpickr-input',{
+    inline:true,
+    locale:flatpickr.l10ns.zh,
+    defaultDate:`${selYear}-${String(selMonth).padStart(2,'0')}`,
+    plugins:[new monthSelectPlugin({shorthand:true,dateFormat:"Y-m",altFormat:"Y年m月"})],
+    onChange(selectedDates,dateStr){
+     if(dateStr){
+      const [y,m]=dateStr.split('-').map(Number);
+      selYear=y;selMonth=m;
+      $('dp-selected-text').textContent=`${selYear}年${selMonth}月`;
+     }
+    }
+   });
+  } else {
+   fpInstance=flatpickr('#dp-flatpickr-input',{
+    inline:true,
+    locale:flatpickr.l10ns.zh,
+    defaultDate:`${selYear}-${String(selMonth).padStart(2,'0')}-01`,
+    dateFormat:"Y-m-d",
+    onChange(selectedDates){
+     if(selectedDates.length>0){
+      const d=selectedDates[0];
+      selYear=d.getFullYear();
+      selMonth=d.getMonth()+1;
+      $('dp-selected-text').textContent=`${selYear}年${selMonth}月${d.getDate()}日`;
+     }
+    }
+   });
+  }
  };
- $('cmp-prev-year').onclick=()=>{selYear=Math.max(2000,selYear-1);updateUI()};
- $('cmp-next-year').onclick=()=>{selYear=Math.min(2100,selYear+1);updateUI()};
- $('cmp-this-month').onclick=()=>{selYear=curYear;selMonth=curMonth;updateUI()};
+ $('dp-tab-month').onclick=()=>{
+  if(activeTab==='month')return;
+  activeTab='month';
+  $('dp-tab-month').classList.add('active');
+  $('dp-tab-day').classList.remove('active');
+  $('dp-selected-text').textContent=`${selYear}年${selMonth}月`;
+  initPicker();
+ };
+ $('dp-tab-day').onclick=()=>{
+  if(activeTab==='day')return;
+  activeTab='day';
+  $('dp-tab-day').classList.add('active');
+  $('dp-tab-month').classList.remove('active');
+  initPicker();
+ };
+ $('dp-this-month').onclick=()=>{
+  const now=new Date();
+  selYear=now.getFullYear();
+  selMonth=now.getMonth()+1;
+  $('dp-selected-text').textContent=`${selYear}年${selMonth}月`;
+  initPicker();
+ };
  $('month-apply').onclick=()=>{
   const target=`${selYear}-${String(selMonth).padStart(2,'0')}`;
-  if(target){month=target;viewLimit=200;refresh();closeSheet();remember()}
+  if(target){
+   month=target;
+   viewLimit=200;
+   refresh();
+   closeSheet();
+   remember();
+  }
  };
- updateUI();
+ initPicker();
 };
 $('category').onclick=()=>{showSheet(draft?.refund?'分类':'分类与收支方向',(draft?.refund?'':`<div class="direction-choices"><button type="button" data-direction="EXPENSE" class="${$('direction').dataset.value==='EXPENSE'?'active':''}">支出</button><button type="button" data-direction="INCOME" class="${$('direction').dataset.value==='INCOME'?'active':''}">收入</button></div>`)+[...new Set([...categories,...(customCategories.expense||[]),...(customCategories.income||[])])].map(c=>`<button class="sheet-row" data-category="${escapeText(c)}">${escapeText(c)}<span>${$('category').textContent===c?'✓':''}</span></button>`).join(''));document.querySelectorAll('[data-direction]').forEach(b=>b.onclick=()=>{$('direction').dataset.value=b.dataset.direction;updateAmountSign();document.querySelectorAll('[data-direction]').forEach(e=>e.classList.toggle('active',e===b));remember()});document.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>{$('category').textContent=b.dataset.category;closeSheet();remember()})};
 $('direction').onclick=()=>{if(draft?.refund)return;const income=$('direction').dataset.value!=='INCOME';$('direction').dataset.value=income?'INCOME':'EXPENSE';$('direction').textContent=income?'收入':'支出';updateAmountSign();remember()};
-$('time-label').onclick=()=>{showSheet('修改交易时间',`<p class="sheet-copy">选择账单发生的时间</p><input id="time-picker" class="month-input" type="datetime-local" lang="zh-CN" value="${$('occurred-at').value}"/><div class="sheet-actions"><button type="button" id="time-now-btn">设为现在</button><button type="button" onclick="closeSheet()">取消</button><button class="primary" id="time-apply">确定</button></div>`);$('time-now-btn').onclick=()=>{$('time-picker').value=localTime(Date.now())};$('time-apply').onclick=()=>{const value=$('time-picker').value;if(value){$('occurred-at').value=value;updateTimeChip();closeSheet();remember()}}};
+$('time-label').onclick=()=>{
+ let chosenTime=$('occurred-at').value;
+ showSheet('修改交易时间',`<div id="time-picker-box" style="min-height:300px;display:flex;justify-content:center"><input type="text" id="time-flatpickr-input" style="display:none"/></div><div class="sheet-actions"><button type="button" id="time-now-btn">设为现在</button><button type="button" onclick="closeSheet()">取消</button><button class="primary" id="time-apply">确定</button></div>`);
+ const tfp=flatpickr('#time-flatpickr-input',{
+  inline:true,
+  enableTime:true,
+  time_24hr:true,
+  locale:flatpickr.l10ns.zh,
+  defaultDate:chosenTime.replace('T',' '),
+  dateFormat:"Y-m-d H:i",
+  onChange(dates,str){
+   if(str)chosenTime=str.replace(' ','T');
+  }
+ });
+ $('time-now-btn').onclick=()=>{
+  chosenTime=localTime(Date.now());
+  tfp.setDate(chosenTime.replace('T',' '));
+ };
+ $('time-apply').onclick=()=>{
+  if(chosenTime){
+   $('occurred-at').value=chosenTime;
+   updateTimeChip();
+   closeSheet();
+   remember();
+  }
+ };
+};
 $('import-form').onsubmit=e=>{e.preventDefault();submitDraft()};$('import-form').oninput=remember;
 $('refund-match').onclick=chooseRefundTarget;
 function merchantIconExplanation(record){
