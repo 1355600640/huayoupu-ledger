@@ -327,4 +327,13 @@ class LocalOcrBillParserTest {
             assertEquals(now,result.occurredAt)
         }
     }
+
+    @Test fun paymentCompletedWordingParsesAsExpense() {
+        for (wording in listOf("支付完成", "付款完成", "交易完成")) {
+            val result = parse(wording, "付款金额：25.00元", "商户名称：示例餐厅", "支付时间：2026年10月17日 12:00:00", origin = PaymentApps.WECHAT)!!
+            assertEquals(2500L, result.amountCents)
+            assertEquals(Direction.EXPENSE, result.direction)
+            assertEquals("示例餐厅", result.merchant)
+        }
+    }
 }

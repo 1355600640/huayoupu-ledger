@@ -15,7 +15,7 @@ data class LocalOcrLine(
 /** Conservative, entirely offline extraction of a single completed transaction. */
 object LocalOcrBillParser {
     private val number = Regex("(?<![0-9.])([0-9]{1,3}(?:,[0-9]{3})+|[0-9]+)(\\.[0-9]{1,2})?(?![0-9.])")
-    private val paid = Regex("支付成功|付款成功|转账成功|交易成功|扣款成功|成功扣款|已支付|已付款")
+    private val paid = Regex("支付成功|付款成功|转账成功|交易成功|扣款成功|成功扣款|已支付|已付款|支付完成|付款完成|交易完成")
     private val received = Regex("收款成功|收款到账|已收款|已收钱|已到账|收入")
     private val pending = Regex("请输入.*密码|输入支付密码|指纹验证|面容验证|待付款|待支付|未支付|未付款|支付中|付款中|交易关闭|支付失败|付款失败|交易失败|已取消|转账中")
     private val amountLabel = Regex("^(?:实付款|实付金额|实付(?!价)|实际支付|付款金额|支付金额|转账金额|交易金额|支出金额|收款金额|到账金额|收入金额|金额)[：:]?")
@@ -30,7 +30,7 @@ object LocalOcrBillParser {
     private val paymentTimeLabel = Regex("^(?:原(?:支付|付款|交易|转账)时间|支付时间|付款时间|交易时间|转账时间)[：:]?")
     private val idLabel = Regex("^(?:(?:原)?(?:微信|支付宝)?(?:支付|付款|交易|转账|订单))(?:编号|单号|号)[：:]?")
     private val datePattern = Regex("(20[0-9]{2})[年/.-]([0-9]{1,2})[月/.-]([0-9]{1,2})日?\\s*([0-9]{1,2})[:：]([0-9]{2})(?:[:：]([0-9]{2}))?")
-    private val uiText = Regex("支付成功|付款成功|转账成功|交易成功|账单详情|交易详情|转账详情|全部账单|返回商家|完成|当前状态|账单服务|收款方服务|支付方式|付款方式|零钱|余额|银行卡|对订单有疑惑|电子凭证|退款|返回|服务由|¥|^[+-]?[0-9,.]+$")
+    private val uiText = Regex("支付成功|付款成功|转账成功|交易成功|支付完成|付款完成|交易完成|已支付|已付款|账单详情|交易详情|转账详情|全部账单|返回商家|完成|当前状态|账单服务|收款方服务|支付方式|付款方式|零钱|余额|银行卡|对订单有疑惑|电子凭证|退款|返回|服务由|¥|^[+-]?[0-9,.]+$")
     private val ignoredMoney = Regex("优惠|红包|立减|折扣|优惠券|积分|余额|手续费|服务费|奖励|最多|最高|原价|订单金额|退款|已退")
     private val storeStatistics = Regex("好评率\\s*[0-9]|客服.*[0-9]\\s*秒.*回复|[0-9]\\s*秒.*回复|(?:已售|粉丝)\\s*[0-9]|[0-9][0-9.,万亿wWkK+＋]*人(?:喜欢|收藏|关注)")
     private val merchantNavigation = Regex("^(?:附近门店|前往小程序|商家小程序|小程序|门店|服务|交易服务|喜欢|收藏)\\s*[>〉›→]?$" )
