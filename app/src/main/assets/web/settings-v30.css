@@ -1,10 +1,10 @@
 /* V30 reference: independent payment switches, blue three-step card, compact preferences. */
-.native-app #settings.mobile-active{display:flex;flex-direction:column;gap:14px;padding:24px 16px 96px;max-width:560px;background:linear-gradient(125deg,#f8fafd,#f1f4fa 65%,#f7f9fc)}
+.native-app #settings.mobile-active{display:flex;flex-direction:column;gap:14px;padding:24px 16px 96px;max-width:560px;background:var(--mf-surface-1)}
 #settings>.settings-header{flex:none;min-height:53px;padding:0 10px;align-items:center}
-#settings .settings-header h1{font-size:29px;margin:0 0 5px}
-#settings .settings-header .subtitle{font-size:13px;line-height:1.5;margin:0}
-#settings .settings-header>button{font-size:25px;width:48px;height:48px;color:#729c90}
-#settings .card{background:#ffffffd9;border-radius:20px;box-shadow:none}
+#settings .settings-header h1{font-size:29px;margin:0 0 5px;font-weight:500;color:var(--mf-text-1)}
+#settings .settings-header .subtitle{font-size:13px;line-height:1.5;margin:0;color:var(--mf-text-3)}
+#settings .settings-header>button{font-size:25px;width:48px;height:48px;color:var(--mf-icon-1)}
+#settings .card{background:#ffffff;border:1px solid var(--mf-border-1);border-radius:16px;box-shadow:none}
 #settings .payment-settings{flex:none;padding:18px;margin:0;overflow:visible}
 #settings .payment-settings h2{font-size:18px;margin:0 0 4px;line-height:1.4}
 #settings .payment-settings>p{font-size:12px;color:#718096;line-height:1.6;margin:0 0 10px}
@@ -20,7 +20,7 @@
 #settings .payment-app .switch:before{inset:-11px -2px}
 #settings .payment-settings .payment-note{font-size:11px;color:#718096;margin:9px 0 0;padding-left:14px;position:relative;line-height:1.6}
 #settings .payment-note:before{content:'ⓘ';position:absolute;left:0;color:#7f9bb7}
-#settings>.shake{flex:1.15 0 260px;min-height:260px;display:flex;flex-direction:column;margin:0;padding:22px 12px 13px;border-radius:20px;background:linear-gradient(130deg,#e2f0ff,#e6efff 65%,#e7f6ff)}
+#settings>.shake{flex:1.15 0 260px;min-height:260px;display:flex;flex-direction:column;margin:0;padding:22px 12px 13px;border-radius:20px;background:var(--mf-surface-2);border:1px solid var(--mf-border-1)}
 #settings .shake h2{font-size:22px;line-height:1.4;margin:0 0 10px;max-width:77%;gap:12px;position:relative;z-index:1}
 #settings .shake>p{font-size:12px;line-height:1.8;margin:0 0 16px;max-width:74%;color:#647f9d}
 #settings .shake-illustration{width:120px;height:110px;right:4px;top:7px}
@@ -35,7 +35,7 @@
 #settings .account-preferences{flex:.8 0 159px;display:flex;flex-direction:column;margin:0;padding:0 16px;overflow:visible}
 #settings .account-preferences>button{flex:1;display:flex;align-items:center;gap:14px;min-height:53px;width:100%;padding:14px 0;font-size:14px;text-align:left;border-bottom:1px solid #e9edf3;border-radius:0;background:none}
 #settings .account-preferences>button:last-child{border:0}
-#settings .account-preferences i{color:#21a38a;width:23px;font-size:21px;text-align:center;flex:none}
+#settings .account-preferences i{color:var(--mf-verdant);width:23px;font-size:21px;text-align:center;flex:none}
 #settings .account-preferences b{font-weight:500;white-space:nowrap}
 #settings .account-preferences #engine-provider{margin-left:auto;font-size:12px;color:#718096;max-width:44%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #settings .account-preferences .chevron{color:#8297a8;margin-left:auto;font-size:20px}

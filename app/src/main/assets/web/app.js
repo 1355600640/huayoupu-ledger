@@ -51,6 +51,33 @@ function render(){
  document.querySelector('.balance-number').innerHTML=`<small>¥</small> ${money(total[selected])}`;
  $('home-count').textContent=`共 ${total[selected+'Count']??list.filter(r=>r.direction===direction).length} 笔${selected==='income'?'收入':'消费'}`;
  document.querySelector('.totals').innerHTML=`<div>收入 ¥ ${money(total.income)}</div><div>支出 ¥ ${money(total.expense)}</div>`;
+ const budget=ledgerView?.summary?.budget;
+ const hasBudget=filter==='expense'&&budget?.hasBudget;
+ const summaryMain=$('summary-main'),summaryBudget=$('summary-budget');
+ if(summaryMain&&summaryBudget){
+  if(hasBudget){
+   summaryMain.style.display='none';
+   summaryBudget.style.display='block';
+   const remaining=budget.remaining;
+   const over=remaining<0;
+   const pct=budget.totalBudget>0?Math.min(100,Math.max(0,(budget.spent/budget.totalBudget)*100)):0;
+   $('budget-status-label').textContent=over?'已超支':'剩余预算';
+   $('budget-status-label').style.color=over?'var(--mf-ruby-text)':'var(--mf-text-3)';
+   $('budget-remaining-amount').innerHTML=`<small>¥</small> ${money(Math.abs(remaining))}`;
+   $('budget-remaining-amount').style.color=over?'var(--mf-ruby-text)':'var(--mf-text-1)';
+   const progress=$('budget-progress');
+   progress.classList.toggle('over',over);
+   $('budget-progress-bar').style.width=(over?100:pct)+'%';
+   $('budget-sub-spent').innerHTML=`<span>已花 ¥ ${money(budget.spent)}</span><span>预算 ¥ ${money(budget.totalBudget)}</span>`;
+   $('budget-spent-ratio').textContent=`${pct.toFixed(0)}%`;
+  } else {
+   summaryMain.style.display='block';
+   summaryBudget.style.display='none';
+  }
+ }
+ if($('budget-btn-text')){
+  $('budget-btn-text').textContent=hasBudget?'已设预算':'设置预算';
+ }
  drawChart(list,new Date(),ledgerView?.summary?.days);
  const previous=localMonth(new Date(Number(y),Number(m)-2,1).getTime()),before=ledgerView?.summary?.previous?.[selected]??sums(records.filter(r=>r.state==='POSTED'&&localMonth(r.occurredAt)===previous))[selected];
  $('home-change').textContent=before?`较上月 ${total[selected]>=before?'↑':'↓'} ${Math.abs((total[selected]-before)/before*100).toFixed(0)}%`:'本月每日趋势';
@@ -373,11 +400,52 @@ document.querySelectorAll('[data-channel-info]').forEach(b=>b.onclick=()=>{const
 document.querySelector('.scanner').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();viewOrPickImage()}};
 document.querySelectorAll('i').forEach(i=>i.setAttribute('aria-hidden','true'));
 
+function showBudgetSheet(){
+ const budget=ledgerView?.summary?.budget;
+ const hasBudget=budget?.hasBudget;
+ const totalVal=hasBudget?(budget.totalBudget/100).toFixed(2):'';
+ showSheet(`${month.replace('-','年')}月预算`, `
+  <div style="display:flex;flex-direction:column;gap:16px;padding:8px 0">
+   <div style="background:var(--mf-surface-2);border-radius:var(--r-card);padding:14px 16px;border:1px solid var(--mf-border-1)">
+    <label for="budget-total-input" style="display:block;font-size:12px;color:var(--mf-text-3);margin-bottom:6px">本月总预算金额 (元)</label>
+    <div style="display:flex;align-items:center;gap:6px">
+     <span style="font-size:24px;color:var(--mf-text-1)">¥</span>
+     <input id="budget-total-input" type="number" step="0.01" min="0" placeholder="0.00" value="${totalVal}" style="flex:1;border:none;background:none;font-size:28px;font-family:var(--font);color:var(--mf-text-1);outline:none"/>
+    </div>
+   </div>
+   <label style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mf-text-2);cursor:pointer;padding:4px 0">
+    <input type="checkbox" id="budget-recurring" style="width:18px;height:18px;accent-color:var(--mf-verdant)" checked/>
+    <span>沿用到以后每月 (设为默认预算)</span>
+   </label>
+   <div class="sheet-actions" style="margin-top:10px">
+    ${hasBudget?'<button type="button" id="budget-clear" style="color:var(--mf-ruby-text)">清除预算</button>':''}
+    <button type="button" onclick="closeSheet()">取消</button>
+    <button type="button" class="primary" id="budget-save">保存</button>
+   </div>
+  </div>
+ `);
+ if($('budget-clear')){
+  $('budget-clear').onclick=()=>{
+   if(!native){notify('请在 Android 应用中管理预算');return}
+   const res=JSON.parse(native.deleteBudget(month,''));
+   if(res.ok){refresh();closeSheet();notify('预算已清除')}else notify(res.error||'操作失败');
+  };
+ }
+ $('budget-save').onclick=()=>{
+  const val=$('budget-total-input').value.trim();
+  if(!val||Number(val)<0||!/^\d+(\.\d{1,2})?$/.test(val)){notify('请输入有效的预算金额');$('budget-total-input').focus();return}
+  if(!native){notify('请在 Android 应用中保存预算');return}
+  const recurring=$('budget-recurring').checked;
+  const res=JSON.parse(native.saveBudget(JSON.stringify({month,category:'',amount:val,recurring})));
+  if(res.ok){refresh();closeSheet();notify('预算已保存')}else notify(res.error||'保存失败');
+ };
+}
+
 // The second reference adds dedicated manual entry, statistics and local asset accounts.
 let manualType='expense',manualCategory='餐饮',statsType='expense',rankingType='expense',assetsHidden=false;
 const expenseCategories=[['餐饮','utensils'],['交通','bus'],['购物','bag-shopping'],['娱乐','gamepad'],['居住','house'],['医疗','plus'],['教育','graduation-cap'],['服饰','shirt'],['日用','basket-shopping'],['通讯','phone'],['人情','gift'],['其他','ellipsis']];
 const incomeCategories=[['工资','wallet'],['奖金','award'],['礼物','gift'],['退款','rotate-left'],['其他收入','ellipsis']];
-const chartColors=['#48b99c','#87baff','#a6d0ff','#a8e4d6','#c5b9ff','#d9deeb'];
+const chartColors=['#4E886F','#FD8240','#F0AB59','#F55D3E','#FAA800','#A6A4A0'];
 function categoryOptions(){return [...(manualType==='income'?incomeCategories:expenseCategories),...(customCategories[manualType]||[]).map(name=>[name,'tag'])]}
 function beginManual(reset=true){
  if(manualOpen)return;if(manualClosing)closeManual(false);closeSheet(false);if(recordPanelOpen)closeRecordPanel(false);
@@ -412,7 +480,7 @@ const categoryAliases=[
  [/投资|理财|利息/,'chart-line'],[/办公|工作/,'briefcase']
 ];
 function iconForCategory(name){const value=String(name||'其他').trim();return [...expenseCategories,...incomeCategories].find(c=>c[0]===value)?.[1]||categoryAliases.find(([pattern])=>pattern.test(value))?.[1]||''}
-function categoryBadge(name){const icon=iconForCategory(name),key=icon||String(name||'其他'),tone=Array.from(key).reduce((sum,c)=>sum+c.codePointAt(0),0)%5;return `<span class="circle category-icon category-tone-${tone}">${icon?`<i class="fa-solid fa-${icon}" aria-hidden="true"></i>`:`<span class="category-initial" aria-hidden="true">${escapeText(Array.from(String(name||'其他'))[0])}</span>`}</span>`}
+function categoryBadge(name){const icon=iconForCategory(name),key=icon||String(name||'其他'),tone=Array.from(key).reduce((sum,c)=>sum+c.codePointAt(0),0)%5;return `<span class="category-icon category-tone-${tone}">${icon?`<i class="fa-solid fa-${icon}" aria-hidden="true"></i>`:`<span class="category-initial" aria-hidden="true">${escapeText(Array.from(String(name||'其他'))[0])}</span>`}</span>`}
 
 function categoryTotals(list){const groups={};list.forEach(r=>groups[r.category]=(groups[r.category]||0)+r.amountCents);return Object.entries(groups).sort((a,b)=>b[1]-a[1]).map(([name,amount])=>({name,amount}))}
 function drawStats(){

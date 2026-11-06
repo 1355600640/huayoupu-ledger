@@ -8,6 +8,7 @@
    花有谱
   </title>
   <link href="vendor/css/all.min.css" rel="stylesheet"/>
+  <link href="tokens.css" rel="stylesheet"/>
   <link href="v21.css" rel="stylesheet"/>
   <link href="app.css" rel="stylesheet"/>
   <link href="permission.css" rel="stylesheet"/>
@@ -47,17 +48,23 @@
       <i aria-hidden="true" class="fa-solid fa-chevron-down">
       </i>
      </button>
-     <nav aria-label="收支筛选" class="filter">
-      <button class="active" data-filter="expense">
-       支出
+     <div style="display:flex;align-items:center;gap:6px">
+      <button aria-label="设置预算" class="mf-pill" id="budget-btn" type="button" onclick="showBudgetSheet()">
+       <i aria-hidden="true" class="fa-solid fa-sliders"></i>
+       <span id="budget-btn-text">预算</span>
       </button>
-      <button data-filter="income">
-       收入
-      </button>
-     </nav>
+      <nav aria-label="收支筛选" class="filter">
+       <button class="active" data-filter="expense">
+        支出
+       </button>
+       <button data-filter="income">
+        收入
+       </button>
+      </nav>
+     </div>
     </div>
     <section class="summary balance">
-     <div>
+     <div id="summary-main" style="flex:1;min-width:0">
       <div class="summary-label balance-title">
        本月支出
       </div>
@@ -65,6 +72,19 @@
       </div>
       <div class="small" id="home-count">
        共 0 笔消费
+      </div>
+     </div>
+     <div id="summary-budget" style="display:none;flex:1;min-width:0" onclick="showBudgetSheet()">
+      <div class="summary-label" style="display:flex;justify-content:space-between;align-items:baseline">
+       <span id="budget-status-label">剩余预算</span>
+       <span class="small" id="budget-spent-ratio" style="font-size:12px;color:var(--mf-text-3)"></span>
+      </div>
+      <div class="summary-amount" id="budget-remaining-amount">
+      </div>
+      <div class="mf-progress" id="budget-progress" style="margin:8px 0 6px">
+       <i id="budget-progress-bar" style="width:0%"></i>
+      </div>
+      <div class="small" id="budget-sub-spent" style="display:flex;justify-content:space-between;color:var(--mf-text-3);font-size:11px">
       </div>
      </div>
      <button aria-label="查看每日收支明细" class="summary-trend" onclick="showTrendDetails()">

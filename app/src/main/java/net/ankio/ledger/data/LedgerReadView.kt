@@ -75,6 +75,40 @@ class LedgerReadView(private val store:LedgerStore) {
             while(c.moveToNext())days.put(JSONObject().put("day",c.getString(0).toInt()).put("direction",c.getString(1)).put("amount",c.getLong(2)))
         };result.put("days",days)
         result.put("postedCount",store.readableDatabase.rawQuery("SELECT COUNT(*) FROM records r WHERE state='POSTED' AND NOT EXISTS(SELECT 1 FROM record_deletions d WHERE d.record_id=r.id)",null).use { it.moveToFirst();it.getInt(0) })
+        val budgets = store.getBudgets(month)
+        val totalBudget = budgets.firstOrNull { it.category.isEmpty() }
+        val budgetObj = JSONObject()
+        val expenseTotal = result.getJSONObject("totals").getLong("expense")
+        if (totalBudget != null && totalBudget.amountCents > 0) {
+            budgetObj.put("hasBudget", true)
+            budgetObj.put("totalBudget", totalBudget.amountCents)
+            budgetObj.put("spent", expenseTotal)
+            budgetObj.put("remaining", totalBudget.amountCents - expenseTotal)
+            val catBudgets = JSONArray()
+            val categoryExpenses = mutableMapOf<String, Long>()
+            for (i in 0 until categories.length()) {
+                val cat = categories.getJSONObject(i)
+                if (cat.getString("direction") == "EXPENSE") {
+                    categoryExpenses[cat.getString("name")] = cat.getLong("amount")
+                }
+            }
+            budgets.filter { it.category.isNotEmpty() }.forEach { b ->
+                val spent = categoryExpenses[b.category] ?: 0L
+                catBudgets.put(JSONObject().apply {
+                    put("category", b.category)
+                    put("budget", b.amountCents)
+                    put("spent", spent)
+                    put("remaining", b.amountCents - spent)
+                })
+            }
+            budgetObj.put("categories", catBudgets)
+        } else {
+            budgetObj.put("hasBudget", false)
+            budgetObj.put("totalBudget", 0)
+            budgetObj.put("spent", expenseTotal)
+            budgetObj.put("remaining", 0)
+        }
+        result.put("budget", budgetObj)
         return result
     }
 }

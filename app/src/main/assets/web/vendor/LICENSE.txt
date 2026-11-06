@@ -163,3 +163,12 @@ All brand icons are trademarks of their respective owners. The use of these
 trademarks does not indicate endorsement of the trademark holder by Font
 Awesome, nor vice versa. **Please do not use brand logos for any purpose except
 to represent the company, product, or service to which they refer.**
+
+
+--------------------------------------------------------------------------------
+
+# Geist Font (https://github.com/vercel/geist-font)
+Copyright 2024 The Geist Project Authors
+
+Licensed under the SIL Open Font License, Version 1.1 (https://openfontlicense.org).
+See above for full OFL 1.1 text.

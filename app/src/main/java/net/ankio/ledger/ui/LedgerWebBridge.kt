@@ -539,6 +539,55 @@ class LedgerWebBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun aboutFrom(json:String) = withPageOrigin(json) { bounds,radius -> activity.showAbout(bounds,radius) }
 
+    @JavascriptInterface
+    fun budget(month: String): String {
+        return try {
+            val budgets = app.store.getBudgets(month)
+            val array = JSONArray()
+            budgets.forEach { b ->
+                array.put(JSONObject().apply {
+                    put("id", b.id)
+                    put("month", b.month)
+                    put("category", b.category)
+                    put("amountCents", b.amountCents)
+                    put("amount", String.format(java.util.Locale.US, "%.2f", b.amountCents / 100.0))
+                    put("updatedAt", b.updatedAt)
+                })
+            }
+            JSONObject().put("ok", true).put("budgets", array).toString()
+        } catch (e: Throwable) {
+            JSONObject().put("ok", false).put("error", e.message ?: "读取预算失败").toString()
+        }
+    }
+
+    @JavascriptInterface
+    fun saveBudget(json: String): String {
+        return try {
+            val obj = JSONObject(json)
+            val month = obj.getString("month")
+            val category = obj.optString("category", "")
+            val amountStr = obj.getString("amount")
+            val amountCents = (amountStr.toDouble() * 100).toLong()
+            val recurring = obj.optBoolean("recurring", false)
+            app.store.saveBudget(month, category, amountCents, recurring)
+            app.changed()
+            JSONObject().put("ok", true).toString()
+        } catch (e: Throwable) {
+            JSONObject().put("ok", false).put("error", e.message ?: "保存预算失败").toString()
+        }
+    }
+
+    @JavascriptInterface
+    fun deleteBudget(month: String, category: String): String {
+        return try {
+            app.store.deleteBudget(month, category)
+            app.changed()
+            JSONObject().put("ok", true).toString()
+        } catch (e: Throwable) {
+            JSONObject().put("ok", false).put("error", e.message ?: "删除预算失败").toString()
+        }
+    }
+
     /** Only finite geometry inside the visible WebView may influence a native surface. */
     private fun withPageOrigin(json:String,open:(android.graphics.RectF,Float?)->Unit) {
         if(json.length>1024)return

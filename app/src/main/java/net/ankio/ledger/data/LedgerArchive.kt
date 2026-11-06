@@ -47,7 +47,7 @@ object LedgerArchive {
     /** The caller owns output. A complete manifest is written only after all images succeed. */
     fun write(store: LedgerStore, channels: ChannelSettings, output: OutputStream): Summary = synchronized(store) {
         val records = store.all()
-        val ledger = JSONObject(LedgerBackup.encode(records, channels, store.accounts(), store.customCategories()))
+        val ledger = JSONObject(LedgerBackup.encode(records, channels, store.accounts(), store.customCategories(), store.allBudgets()))
         val histories = JSONObject()
         val icons = JSONObject()
         val stored = mutableSetOf<String>()

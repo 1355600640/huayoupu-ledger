@@ -51,13 +51,13 @@ body.permission-open>.workspace{filter:blur(4px);pointer-events:none}
 #detailDialog.system-flow .flow-progress{margin:14px 0 21px}
 #detailDialog.system-flow .sms-sheet-close{width:29px;height:29px;background:#f0f2f6;border-radius:50%;right:15px;top:15px;font-size:22px;color:#566174}
 #detailDialog.system-flow button{cursor:pointer}
-#detailDialog.system-flow .permission-cta{margin-top:9px;min-height:43px;border-radius:24px;background:linear-gradient(110deg,#20ad8a,#0ca17a);font-size:15px;font-weight:600}
-#detailDialog.system-flow .system-ready{background:#eaf8f3;display:flex;align-items:center;gap:10px;border-radius:10px;padding:14px;font-size:12px;min-height:53px}
-#detailDialog.system-flow .system-ready>i{font-size:27px;color:#0ca780}
+#detailDialog.system-flow .permission-cta{margin-top:9px;min-height:43px;border-radius:24px;background:var(--mf-verdant);color:#fff;font-size:15px;font-weight:500}
+#detailDialog.system-flow .system-ready{background:var(--mf-verdant-bg);display:flex;align-items:center;gap:10px;border-radius:10px;padding:14px;font-size:12px;min-height:53px}
+#detailDialog.system-flow .system-ready>i{font-size:27px;color:var(--mf-verdant-strong)}
 #detailDialog.system-flow .system-ready>div{flex:1}
-#detailDialog.system-flow .system-ready>button{margin-left:auto;color:#607184;white-space:nowrap}
+#detailDialog.system-flow .system-ready>button{margin-left:auto;color:var(--mf-text-2);white-space:nowrap}
 #detailDialog.system-flow .system-hero{text-align:center;margin:12px 0 9px}
-#detailDialog.system-flow .system-hero-icon{width:76px;height:76px;background:radial-gradient(circle,#def3e9,#eaf7f2);border-radius:50%;display:grid;place-items:center;margin:0 auto 10px;color:#0b9c77;font-size:37px}
+#detailDialog.system-flow .system-hero-icon{width:76px;height:76px;background:var(--mf-verdant-bg);border-radius:50%;display:grid;place-items:center;margin:0 auto 10px;color:var(--mf-verdant-strong);font-size:37px}
 #detailDialog.system-flow .system-hero h2{font-size:24px;text-align:center;margin:9px 0;font-weight:700;line-height:1.35;padding:0}
 #detailDialog.system-flow .system-hero p,#detailDialog.system-flow .background-heading p{font-size:13px;color:#81899a;line-height:1.6;margin:0}
 #detailDialog.system-flow .system-target{border-radius:20px;background:#e3f5ec;color:#288c71;font-size:11px;font-weight:600;width:max-content;max-width:100%;text-align:center;padding:5px 15px;margin:9px auto 13px}

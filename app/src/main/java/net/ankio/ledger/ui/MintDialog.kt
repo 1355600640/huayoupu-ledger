@@ -117,11 +117,11 @@ class MintDialog(val context: Context, title: String, subtitle: String = "") {
         }
     }
     companion object {
-        val GREEN = Color.rgb(39,158,128)
-        val PALE = Color.rgb(227,243,239)
-        val INK = Color.rgb(16,20,33)
-        val MUTED = Color.rgb(105,118,139)
-        val LINE = Color.rgb(224,230,236)
+        val GREEN = Color.rgb(78, 136, 111)
+        val PALE = Color.rgb(243, 247, 245)
+        val INK = Color.rgb(77, 72, 69)
+        val MUTED = Color.rgb(146, 143, 139)
+        val LINE = Color.rgb(244, 244, 242)
         fun confirm(context: Context, title: String, message: String, positive: String, onConfirm: () -> Unit) {
             val sheet = MintDialog(context,title)
             sheet.content.addView(sheet.text(message,14,MUTED))

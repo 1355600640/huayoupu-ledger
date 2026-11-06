@@ -36,7 +36,7 @@ sealed class IngestResult {
 data class DeletedRecord(val id:Long,val expiresAt:Long)
 data class DayTotals(val expenseCents: Long, val incomeCents: Long)
 
-class LedgerStore(context: Context, private val name: String = "ledger.db", private val screenshots: ScreenshotStore = ScreenshotStore.get(context)) : SQLiteOpenHelper(context, name, null, 8) {
+class LedgerStore(context: Context, private val name: String = "ledger.db", private val screenshots: ScreenshotStore = ScreenshotStore.get(context)) : SQLiteOpenHelper(context, name, null, 9) {
     private fun imageOwner(id: Long) = "ledger:$name:$id"
     private fun historyOwner(id: Long, sequence: Int) = if (sequence == 1) imageOwner(id) else "ledger:$name:$id:history:$sequence"
     override fun onOpen(db:SQLiteDatabase) {
@@ -74,39 +74,56 @@ class LedgerStore(context: Context, private val name: String = "ledger.db", priv
         createMerchantIcons(db)
         createRefunds(db)
         createIdentitiesAndUndo(db)
+        createBudgets(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        check(oldVersion in 1..7 && newVersion == 8) { "Unsupported database migration $oldVersion → $newVersion" }
+        check(oldVersion in 1..8 && newVersion == 9) { "Unsupported database migration $oldVersion → $newVersion" }
         // SQLiteOpenHelper wraps this migration in a transaction; existing bills remain untouched.
-        if (oldVersion == 1) createAccountsAndCategories(db)
-        if (oldVersion < 3) createCaptureImages(db)
-        if (oldVersion < 5) {
-            if (oldVersion == 4) db.execSQL("ALTER TABLE merchant_icons RENAME TO legacy_merchant_icons")
-            createMerchantIcons(db)
-            db.query("records", arrayOf("id", "merchant"), null, null, null, null, null).use { cursor ->
-                while (cursor.moveToNext()) linkMerchantIcon(db, cursor.getLong(0), cursor.getString(1), null)
+        if (oldVersion < 8) {
+            if (oldVersion == 1) createAccountsAndCategories(db)
+            if (oldVersion < 3) createCaptureImages(db)
+            if (oldVersion < 5) {
+                if (oldVersion == 4) db.execSQL("ALTER TABLE merchant_icons RENAME TO legacy_merchant_icons")
+                createMerchantIcons(db)
+                db.query("records", arrayOf("id", "merchant"), null, null, null, null, null).use { cursor ->
+                    while (cursor.moveToNext()) linkMerchantIcon(db, cursor.getLong(0), cursor.getString(1), null)
+                }
+                if (oldVersion == 4) migratePreviewIcons(db)
             }
-            if (oldVersion == 4) migratePreviewIcons(db)
-        }
-        if (oldVersion in 3..5) {
-            db.execSQL("ALTER TABLE capture_images RENAME TO legacy_capture_images")
-            createCaptureImages(db)
-            db.execSQL("INSERT INTO capture_images(record_id,image) SELECT record_id,image FROM legacy_capture_images")
-            db.execSQL("DROP TABLE legacy_capture_images")
-        }
-        createRefunds(db)
-        db.execSQL("""INSERT OR IGNORE INTO capture_history(record_id,sequence,at,kind,amount,refunded,raw_text,refund_mode)
-            SELECT id,1,received_at,'payment',amount,0,raw_text,'cumulative' FROM records""")
-        createIdentitiesAndUndo(db)
-        db.query("records",null,null,null,null,null,null).use { c -> while(c.moveToNext()) {
-            val record=read(c)
-            val captured=db.rawQuery("SELECT raw_text FROM capture_history WHERE record_id=?",arrayOf(record.id.toString())).use { h->
-                buildList { while(h.moveToNext())addAll(TransactionIdentities.from(record.capture.copy(text=h.getString(0)),record.bill.copy(transactionId=null))) }
+            if (oldVersion in 3..5) {
+                db.execSQL("ALTER TABLE capture_images RENAME TO legacy_capture_images")
+                createCaptureImages(db)
+                db.execSQL("INSERT INTO capture_images(record_id,image) SELECT record_id,image FROM legacy_capture_images")
+                db.execSQL("DROP TABLE legacy_capture_images")
             }
-            val recovered=(TransactionIdentities.from(record.capture,record.bill)+captured).distinct().groupBy { it.scope }.values.filter { it.size==1 }.flatten()
-            persistIdentities(db,record.id,recovered)
-        } }
+            createRefunds(db)
+            db.execSQL("""INSERT OR IGNORE INTO capture_history(record_id,sequence,at,kind,amount,refunded,raw_text,refund_mode)
+                SELECT id,1,received_at,'payment',amount,0,raw_text,'cumulative' FROM records""")
+            createIdentitiesAndUndo(db)
+            db.query("records",null,null,null,null,null,null).use { c -> while(c.moveToNext()) {
+                val record=read(c)
+                val captured=db.rawQuery("SELECT raw_text FROM capture_history WHERE record_id=?",arrayOf(record.id.toString())).use { h->
+                    buildList { while(h.moveToNext())addAll(TransactionIdentities.from(record.capture.copy(text=h.getString(0)),record.bill.copy(transactionId=null))) }
+                }
+                val recovered=(TransactionIdentities.from(record.capture,record.bill)+captured).distinct().groupBy { it.scope }.values.filter { it.size==1 }.flatten()
+                persistIdentities(db,record.id,recovered)
+            } }
+        }
+        if (oldVersion < 9) {
+            createBudgets(db)
+        }
+    }
+
+    private fun createBudgets(db: SQLiteDatabase) {
+        db.execSQL("""CREATE TABLE IF NOT EXISTS budgets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            month TEXT NOT NULL,
+            category TEXT NOT NULL,
+            amount INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL
+        )""")
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS idx_budgets_month_category ON budgets(month, category)")
     }
 
     private fun createIdentitiesAndUndo(db:SQLiteDatabase) {
@@ -1113,8 +1130,65 @@ class LedgerStore(context: Context, private val name: String = "ledger.db", priv
     }
 
     @Synchronized
+    fun saveBudget(month: String, category: String, amountCents: Long, recurring: Boolean = false) {
+        require(amountCents in 0..Money.MAX_CENTS) { "预算金额无效" }
+        require(month == "*" || month.matches(Regex("""^\d{4}-\d{2}$"""))) { "预算月份格式错误" }
+        require(category.length <= 40) { "预算分类名称过长" }
+        val targetMonth = if (recurring) "*" else month
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("month", targetMonth)
+            put("category", category)
+            put("amount", amountCents)
+            put("updated_at", System.currentTimeMillis())
+        }
+        db.insertWithOnConflict("budgets", null, values, SQLiteDatabase.CONFLICT_REPLACE)
+    }
+
+    @Synchronized
+    fun deleteBudget(month: String, category: String) {
+        val db = writableDatabase
+        db.delete("budgets", "(month = ? OR month = '*') AND category = ?", arrayOf(month, category))
+    }
+
+    fun getBudgets(month: String): List<LedgerBudget> {
+        val db = readableDatabase
+        val results = mutableMapOf<String, LedgerBudget>()
+        db.query("budgets", arrayOf("id", "month", "category", "amount", "updated_at"),
+            "month = '*'", null, null, null, null).use { c ->
+            while (c.moveToNext()) {
+                val b = LedgerBudget(c.getLong(0), c.getString(1), c.getString(2), c.getLong(3), c.getLong(4))
+                results[b.category] = b
+            }
+        }
+        if (month != "*") {
+            db.query("budgets", arrayOf("id", "month", "category", "amount", "updated_at"),
+                "month = ?", arrayOf(month), null, null, null).use { c ->
+                while (c.moveToNext()) {
+                    val b = LedgerBudget(c.getLong(0), c.getString(1), c.getString(2), c.getLong(3), c.getLong(4))
+                    results[b.category] = b
+                }
+            }
+        }
+        return results.values.toList()
+    }
+
+    fun allBudgets(): List<LedgerBudget> {
+        val db = readableDatabase
+        return db.query("budgets", arrayOf("id", "month", "category", "amount", "updated_at"),
+            null, null, null, null, "month ASC, category ASC").use { c ->
+            buildList {
+                while (c.moveToNext()) {
+                    add(LedgerBudget(c.getLong(0), c.getString(1), c.getString(2), c.getLong(3), c.getLong(4)))
+                }
+            }
+        }
+    }
+
+    @Synchronized
     fun merge(records: List<LedgerRecord>, accounts: List<LedgerAccount> = emptyList(),
-              categories: List<CustomCategory> = emptyList()): Int {
+              categories: List<CustomCategory> = emptyList(),
+              budgets: List<LedgerBudget> = emptyList()): Int {
         val db = writableDatabase
         db.beginTransaction()
         try {
@@ -1138,9 +1212,20 @@ class LedgerStore(context: Context, private val name: String = "ledger.db", priv
                 category.validate()
                 db.insertWithOnConflict("custom_categories", null, categoryValues(category), SQLiteDatabase.CONFLICT_IGNORE)
             }
+            budgets.forEach { budget ->
+                budget.validate()
+                db.insertWithOnConflict("budgets", null, budgetValues(budget), SQLiteDatabase.CONFLICT_REPLACE)
+            }
             db.setTransactionSuccessful()
             return imported
         } finally { db.endTransaction() }
+    }
+
+    private fun budgetValues(budget: LedgerBudget) = ContentValues().apply {
+        put("month", budget.month)
+        put("category", budget.category)
+        put("amount", budget.amountCents)
+        put("updated_at", budget.updatedAt)
     }
 
     private fun accountValues(account: LedgerAccount) = ContentValues().apply {

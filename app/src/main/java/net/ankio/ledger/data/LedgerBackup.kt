@@ -10,7 +10,8 @@ import java.util.UUID
 
 data class ValidatedBackup(val records: List<LedgerRecord>, val channels: Map<ChannelSettings.Channel, Boolean>,
     val accounts: List<LedgerAccount> = emptyList(), val categories: List<CustomCategory> = emptyList(),
-    val histories:Map<String,List<RestoredCaptureHistory>> = emptyMap())
+    val histories:Map<String,List<RestoredCaptureHistory>> = emptyMap(),
+    val budgets: List<LedgerBudget> = emptyList())
 
 object LedgerBackup {
     const val MAX_BYTES = 16 * 1024 * 1024
@@ -52,7 +53,7 @@ object LedgerBackup {
     }
     fun encode(store: LedgerStore, channels: ChannelSettings): String = synchronized(store) {
         val records=store.all()
-        val root=JSONObject(encode(records, channels, store.accounts(), store.customCategories()))
+        val root=JSONObject(encode(records, channels, store.accounts(), store.customCategories(), store.allBudgets()))
         val histories=JSONObject()
         val grouped=store.captureHistories()
         var imageBytes=0L
@@ -79,7 +80,7 @@ object LedgerBackup {
         val db=store.writableDatabase
         db.beginTransaction()
         try {
-            val count=store.merge(backup.records,backup.accounts,backup.categories)
+            val count=store.merge(backup.records,backup.accounts,backup.categories,backup.budgets)
             for((uid,id) in store.activeRecordIdsByUid())if(uid !in old)restoreMedia(requireNotNull(store.get(id)))
             db.setTransactionSuccessful();count
         } catch(error:Throwable) {
@@ -96,7 +97,8 @@ object LedgerBackup {
         .put("refundAmountCents",e.refundAmountCents?:JSONObject.NULL).put("image",JSONObject.NULL)
 
     fun encode(records: List<LedgerRecord>, channels: ChannelSettings,
-               accounts: List<LedgerAccount> = emptyList(), categories: List<CustomCategory> = emptyList()): String {
+               accounts: List<LedgerAccount> = emptyList(), categories: List<CustomCategory> = emptyList(),
+               budgets: List<LedgerBudget> = emptyList()): String {
         val settings = JSONObject()
         ChannelSettings.Channel.entries.forEach { settings.put(it.key, channels.enabled(it)) }
         val array = JSONArray()
@@ -128,9 +130,15 @@ object LedgerBackup {
             categories.filter { it.direction == direction }.forEach { it.validate(); names.put(it.name) }
             custom.put(if (direction == Direction.EXPENSE) "expense" else "income", names)
         }
+        val budgetArray = JSONArray()
+        budgets.forEach { budget ->
+            budget.validate()
+            budgetArray.put(JSONObject().put("month", budget.month).put("category", budget.category)
+                .put("amount", budget.amountCents).put("updatedAt", budget.updatedAt))
+        }
         return JSONObject().put("format", "simple-ledger").put("version", 3)
             .put("channels", settings).put("records", array).put("accounts", accountArray)
-            .put("customCategories", custom).toString(2)
+            .put("customCategories", custom).put("budgets", budgetArray).toString(2)
     }
 
     fun decode(stream: InputStream): ValidatedBackup {
@@ -255,6 +263,17 @@ object LedgerBackup {
                 }
             }
         }
-        return ValidatedBackup(records, channels, accounts, categories,histories)
+        val budgets = root.optJSONArray("budgets")?.let { arr ->
+            require(arr.length() <= 10_000) { "备份预算过多" }
+            (0 until arr.length()).map { i ->
+                val obj = arr.getJSONObject(i)
+                val m = obj.getString("month")
+                val cat = obj.optString("category", "")
+                val amt = (obj.get("amount") as Number).toLong()
+                val upd = obj.optLong("updatedAt", System.currentTimeMillis())
+                LedgerBudget(0, m, cat, amt, upd).also { it.validate() }
+            }
+        } ?: emptyList()
+        return ValidatedBackup(records, channels, accounts, categories, histories, budgets)
     }
 }

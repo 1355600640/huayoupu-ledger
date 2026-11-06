@@ -1,0 +1,200 @@
+/* Mini Finance Design Tokens & Typography */
+@font-face {
+  font-family: "Geist";
+  src: url("vendor/webfonts/Geist-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist";
+  src: url("vendor/webfonts/Geist-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Text Semantic Tokens */
+  --mf-text-1: #4D4845;
+  --mf-text-2: #65605C;
+  --mf-text-3: #928F8B;
+  --mf-text-disabled: #DBDBD8;
+  --mf-text-inverse: #FFFFFF;
+
+  /* Surface & Fill Tokens */
+  --mf-surface-1: #FFFFFF;
+  --mf-surface-2: #F6F6F4;
+  --mf-surface-3: #EFEFED;
+  --mf-overlay: rgba(0, 0, 0, 0.17);
+
+  /* Border Tokens */
+  --mf-border-1: #F4F4F2;
+  --mf-border-2: #E7E7E4;
+
+  /* Icon Tokens */
+  --mf-icon-1: #4D4845;
+  --mf-icon-2: #A6A4A0;
+
+  /* Accents */
+  /* Verdant (Brand Primary) */
+  --mf-verdant: #4E886F;
+  --mf-verdant-strong: #3D785F;
+  --mf-verdant-text: #215B44;
+  --mf-verdant-bg: #F3F7F5;
+
+  /* Ruby (Expense / Delete) */
+  --mf-ruby: #F55D3E;
+  --mf-ruby-text: #C9362B;
+  --mf-ruby-bg: #FFF4F1;
+
+  /* Ember (Accent / Progress) */
+  --mf-ember: #FD8240;
+  --mf-ember-bg: #FFF4F0;
+
+  /* Sandstone */
+  --mf-sand: #F0AB59;
+  --mf-sand-text: #976035;
+  --mf-sand-bg: #FDF6E4;
+
+  /* Marigold */
+  --mf-gold: #FAA800;
+  --mf-gold-bg: #FFF5E3;
+
+  /* Spacing */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+
+  /* Radius */
+  --r-bar: 4px;
+  --r-box: 8px;
+  --r-card: 12px;
+  --r-pill: 24px;
+  --r-round: 100px;
+
+  /* Typography Font Stack */
+  --font: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --shadow-float: 0px 8px 16px rgba(26, 26, 26, 0.08), 0px 4px 6px rgba(26, 26, 26, 0.08), 0px 1px 2px rgba(26, 26, 26, 0.12);
+
+  /* Legacy Compatibility Variables */
+  --green: var(--mf-verdant);
+  --ink: var(--mf-text-1);
+  --muted: var(--mf-text-3);
+  --page: var(--mf-surface-1);
+  --surface: var(--mf-surface-1);
+  --line: var(--mf-border-1);
+}
+
+/* Typography Hierarchy Utilities */
+.t-large-title { font-family: var(--font); font-size: 32px; line-height: 48px; font-weight: 400; }
+.t-title { font-family: var(--font); font-size: 24px; line-height: 36px; font-weight: 500; }
+.t-body-m { font-family: var(--font); font-size: 16px; line-height: 24px; font-weight: 500; }
+.t-sub-m { font-family: var(--font); font-size: 14px; line-height: 20px; font-weight: 500; }
+.t-foot { font-family: var(--font); font-size: 12px; line-height: 16px; font-weight: 400; }
+.t-foot-m { font-family: var(--font); font-size: 12px; line-height: 16px; font-weight: 500; }
+.t-caption { font-family: var(--font); font-size: 10px; line-height: 14px; font-weight: 400; }
+
+/* Reusable Components */
+.mf-section {
+  background: var(--mf-surface-1);
+  padding: var(--sp-6) var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+.mf-section.alt {
+  background: var(--mf-surface-2);
+}
+.mf-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 8px 12px;
+  border-radius: var(--r-pill);
+  background: var(--mf-surface-2);
+  color: var(--mf-text-1);
+  font-family: var(--font);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  border: none;
+}
+.mf-icon-40 {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: var(--r-round);
+  background: #FFFFFF;
+  border: 1px solid var(--mf-border-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mf-icon-1);
+}
+.mf-progress {
+  position: relative;
+  height: 4px;
+  border-radius: var(--r-bar);
+  background: rgba(253, 130, 64, 0.25);
+  overflow: hidden;
+}
+.mf-progress > i {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  border-radius: var(--r-bar);
+  background: var(--mf-ember);
+}
+.mf-progress.over {
+  background: rgba(245, 93, 62, 0.25);
+}
+.mf-progress.over > i {
+  background: var(--mf-ruby);
+}
+
+/* Category Accent Icon Colors */
+.mf-icon-verdant { color: var(--mf-verdant-strong); }
+.mf-icon-ruby { color: var(--mf-ruby-text); }
+.mf-icon-ember { color: var(--mf-ember); }
+.mf-icon-sand { color: var(--mf-sand-text); }
+.mf-icon-gold { color: var(--mf-gold); }
+.mf-icon-primary { color: var(--mf-icon-1); }
+
+/* Budget Display Card Utilities */
+.mf-budget-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+.mf-budget-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.mf-budget-remaining {
+  font-family: var(--font);
+  font-size: 32px;
+  line-height: 1.25;
+  font-weight: 400;
+  color: var(--mf-text-1);
+}
+.mf-budget-remaining.over {
+  color: var(--mf-ruby-text);
+}
+.mf-budget-sub {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--mf-text-3);
+  font-family: var(--font);
+}
+
