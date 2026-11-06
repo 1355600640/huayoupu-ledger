@@ -55,5 +55,37 @@ class WechatPaymentDetectorTest {
         val another=PaymentPageDetector.detect(page("转账成功","￥0.01","完成").copy(windowId=72))!!
         assertTrue(gate.observe(another));assertTrue(gate.claim(another))
     }
+
+    @Test fun walletOrderInfoNewUIDetectsPaymentSuccess() {
+        val orderUi = "com.tencent.mm.plugin.wallet_core.ui.WalletOrderInfoNewUI"
+        assertNotNull(PaymentPageDetector.detect(page("支付成功", "¥15.50", "完成", activity = orderUi)))
+        assertNotNull(PaymentPageDetector.detect(page("支付完成", "¥88.00", "商户名称", "完成", activity = orderUi)))
+        assertNotNull(PaymentPageDetector.detect(page("付款完成", "¥32.50", "完成", activity = orderUi)))
+        // Standalone currency symbol and integer amount
+        assertNotNull(PaymentPageDetector.detect(page("支付成功", "¥", "28", "完成", activity = orderUi)))
+    }
+
+    @Test fun walletOfflineCoinPurseUIDetectsBarcodePayment() {
+        val offlineUi = "com.tencent.mm.plugin.offline.ui.WalletOfflineCoinPurseUI"
+        assertTrue(PaymentPageDetector.eligibleActivity(PaymentApps.WECHAT, offlineUi))
+        assertNotNull(PaymentPageDetector.detect(page("支付成功", "¥25.00", activity = offlineUi)))
+    }
+
+    @Test fun wechatOrderHandlerUIDetectsAppPayment() {
+        val appOrderUi = "com.tencent.mm.plugin.wallet_index.ui.OrderHandlerUI"
+        assertTrue(PaymentPageDetector.eligibleActivity(PaymentApps.WECHAT, appOrderUi))
+        assertNotNull(PaymentPageDetector.detect(page("支付成功", "¥99.00", "返回应用", activity = appOrderUi)))
+    }
+
+    @Test fun wechatPromotionsAndDiscountsDoNotBreakPaymentTotal() {
+        val orderUi = "com.tencent.mm.plugin.wallet_core.ui.WalletOrderInfoNewUI"
+        assertNotNull(PaymentPageDetector.detect(page("支付成功", "¥18.00", "已优惠¥2.00", "获得100积分", "完成", activity = orderUi)))
+        assertNotNull(PaymentPageDetector.detect(page("支付成功", "¥50.00", "微信支付优惠¥5.00", "抽奖最高得88元", "完成", activity = orderUi)))
+    }
+
+    @Test fun paidToRecipientStatusDetectsSuccessfully() {
+        assertNotNull(PaymentPageDetector.detect(page("向麦当劳付款成功", "¥35.00", "完成")))
+        assertNotNull(PaymentPageDetector.detect(page("已向全家便利店支付成功", "¥12.80", "完成")))
+    }
 }
 

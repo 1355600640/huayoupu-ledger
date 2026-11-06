@@ -19,7 +19,7 @@ object DuplicateDetector {
         val usableMerchant = !genericMerchant(bill.merchant)
         val currentText = normalize(capture.text).trim()
 
-        // Live OCR pair (e.g. payment_auto and shake, or repeated shakes on the same screen)
+        // Live OCR pair (e.g. payment_auto and shake, or repeated captures of the same screen)
         val liveOcrExact = existing.firstOrNull { old ->
             if (capture.source != Source.OCR || old.source != Source.OCR) return@firstOrNull false
             if (bill.amountCents != old.amountCents || bill.direction != old.direction) return@firstOrNull false
@@ -27,11 +27,13 @@ object DuplicateDetector {
             val oldProvider = identityScope(Capture(old.source, old.origin, old.text))
             val sameProvider = currentProvider != null && currentProvider == oldProvider
             if (!sameProvider) return@firstOrNull false
+            val sameText = normalize(old.text).trim() == currentText
+            val liveAutoOrShake = (capture.origin.startsWith("shake:") || capture.origin.startsWith("payment_auto:")) &&
+                (old.origin.startsWith("shake:") || old.origin.startsWith("payment_auto:"))
             val sameMerchant = (usableMerchant && merchant == normalizedMerchant(old.merchant)) ||
-                (genericMerchant(bill.merchant) && genericMerchant(old.merchant)) ||
-                (old.origin == capture.origin && normalize(old.text).trim() == currentText)
+                (genericMerchant(bill.merchant) && genericMerchant(old.merchant))
             val conflictTx = bill.transactionId != null && old.transactionId != null && bill.transactionId != old.transactionId
-            sameMerchant && !conflictTx
+            !conflictTx && (sameText || (liveAutoOrShake && sameMerchant))
         }
         if (liveOcrExact != null) return Duplicate.Exact(liveOcrExact.id)
 

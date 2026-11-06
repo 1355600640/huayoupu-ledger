@@ -101,7 +101,7 @@ class PaymentPageDetectorTest {
 
     @Test fun walletCoreResultCanMatchReadableSuccessButNotAnUnreadableOrPasswordPage() {
         val activity="com.tencent.mm.plugin.wallet_core.ui.WalletOrderInfoNewUI"
-        assertNull(PaymentPageDetector.detect(page(PaymentApps.WECHAT,activity,"支付成功","¥12.34")))
+        assertNotNull(PaymentPageDetector.detect(page(PaymentApps.WECHAT,activity,"支付成功","¥12.34")))
         assertNull(PaymentPageDetector.detect(page(PaymentApps.WECHAT,activity)))
         assertNull(PaymentPageDetector.detect(page(PaymentApps.WECHAT,activity,"请输入支付密码","¥12.34")))
     }

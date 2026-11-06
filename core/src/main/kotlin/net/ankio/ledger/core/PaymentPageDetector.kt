@@ -9,25 +9,38 @@ object PaymentPageDetector {
     const val WECHAT_LITE_OPAQUE_RESULT = "com.tencent.mm.plugin.lite.ui.WxaLiteAppLiteUI"
     private val dedicatedWechatResults = setOf(
         "com.tencent.mm.plugin.remittance.ui.RemittanceResultNewUI",
+        "com.tencent.mm.plugin.remittance.ui.RemittanceResultUI",
+        "com.tencent.mm.plugin.wallet_core.ui.WalletOrderInfoNewUI",
+        "com.tencent.mm.plugin.wallet_core.ui.WalletOrderInfoUI",
     )
-    private val successStatuses = setOf("支付成功", "付款成功", "交易成功", "转账成功", "对方已收钱", "对方已收款", "已被接收")
+    private val successStatuses = setOf(
+        "支付成功", "付款成功", "交易成功", "转账成功",
+        "支付完成", "付款完成", "交易完成", "已支付", "已付款",
+        "对方已收钱", "对方已收款", "已被接收"
+    )
     private val prohibited = listOf("请输入支付密码", "输入密码", "确认支付", "确认付款", "支付失败", "付款失败", "转账失败", "交易失败", "交易关闭", "已退还", "退款中", "待支付", "等待付款")
     private val transactionLabels = listOf("交易单号", "转账单号", "支付宝交易号", "交易号", "订单编号", "订单号")
-    private val actualAmountLabels = listOf("实付款", "实付金额", "实际付款", "实际支付", "支付金额", "付款金额", "转账金额", "收款金额")
-    private val promotionLabels = listOf("领取", "领券", "优惠券", "代金券", "抵扣券", "红包", "积分", "返现", "立减", "补贴", "优惠金额")
+    private val actualAmountLabels = listOf("实付款", "实付金额", "实际付款", "实际支付", "支付金额", "付款金额", "转账金额", "收款金额", "扣款金额", "扣款")
+    private val promotionLabels = listOf(
+        "领取", "领券", "优惠券", "代金券", "抵扣券", "红包", "积分", "返现",
+        "立减", "补贴", "优惠金额", "优惠", "折扣", "立省", "已省", "节省",
+        "赠送", "最高", "抽奖", "奖励"
+    )
     private val idPattern = Regex("[0-9A-Za-z]{16,64}")
-    private val bareAmount = Regex("[+\\-−]?[0-9]{1,9}\\.[0-9]{2}")
+    private val bareAmount = Regex("[+\\-−]?[0-9]{1,9}\\.[0-9]{1,2}")
     private val currencyAmount = Regex("[¥][+\\-−]?([0-9]{1,9}(?:\\.[0-9]{1,2})?)|([0-9]{1,9}(?:\\.[0-9]{1,2})?)元")
+    private val amountNumberPattern = Regex("^[+\\-−]?[0-9]{1,9}(?:\\.[0-9]{1,2})?$")
 
     private val historyActivity = Regex("detail|orderinfo|billhistory|transactionrecord",RegexOption.IGNORE_CASE)
     private val whitespace = Regex("\\s+")
     private val receivedStatus = Regex("^.{1,40}已收[款钱]$")
-    private val successWithMessage = Regex("^(支付成功|付款成功|转账成功|交易成功)[，,:：].{0,80}$")
+    private val successWithMessage = Regex("^(支付成功|付款成功|转账成功|交易成功|支付完成|付款完成|交易完成)[，,:：].{0,80}$")
+    private val paidToRecipient = Regex("^.{0,30}(?:已向|向|给).{1,30}(?:支付|付款|转账)(?:成功|完成)$")
     private val clockText = Regex("\\d{1,2}:\\d{2}(:\\d{2})?")
 
     fun eligibleActivity(packageName: String, activity: String): Boolean = when (packageName) {
         PaymentApps.WECHAT -> activity in setOf(WECHAT_FRAMEWORK_RESULT,WECHAT_LITE_RESULT,WECHAT_LITE_OPAQUE_RESULT) || activity.startsWith("com.tencent.mm.plugin.") &&
-            listOf(".wallet.", ".wallet_core.", ".remittance.", ".wxpay.", ".webview.ui.tools.").any(activity::contains)
+            listOf(".wallet.", ".wallet_core.", ".wallet_index.", ".offline.", ".remittance.", ".wxpay.", ".webview.ui.tools.").any(activity::contains)
         PaymentApps.ALIPAY -> activity.startsWith("com.alipay.") || activity.startsWith("${PaymentApps.ALIPAY}.")
         // An SDK result may be in a merchant activity. Content validation below is stricter.
         PaymentApps.TAOBAO -> activity.startsWith("com.taobao.") || activity.startsWith("com.alibaba.") || activity.startsWith("com.alipay.")
@@ -38,10 +51,28 @@ object PaymentPageDetector {
         if (CapturePrivacy.sensitive(page) || !eligibleActivity(page.packageName, page.activity)) return null
         // Automatic capture is the immediate payment result, never a historical bill opened
         // by the user. Details remain an explicit shake/import operation.
-        if(historyActivity.containsMatchIn(page.activity))return null
-        val texts = page.texts.map { normalize(it).replace(whitespace, "") }
+        val isWechatResult = page.packageName == PaymentApps.WECHAT &&
+            (page.activity.endsWith("WalletOrderInfoNewUI") || page.activity.endsWith("WalletOrderInfoUI"))
+        if (!isWechatResult && historyActivity.containsMatchIn(page.activity)) return null
+        val rawTexts = page.texts.map { normalize(it).replace(whitespace, "") }
             .filter(String::isNotBlank).distinct()
-        if(texts.any { it in setOf("全部账单","账单详情","交易详情","转账详情","账单服务") })return null
+        if (rawTexts.any { it in setOf("全部账单","账单详情","交易详情","转账详情","账单服务") }) return null
+        // Merge standalone currency symbol "¥" or suffix "元" with adjacent numbers
+        val texts = mutableListOf<String>()
+        var idx = 0
+        while (idx < rawTexts.size) {
+            val cur = rawTexts[idx]
+            if ((cur == "¥" || cur == "￥") && idx + 1 < rawTexts.size && amountNumberPattern.matches(rawTexts[idx + 1])) {
+                texts.add("¥" + rawTexts[idx + 1])
+                idx += 2
+            } else if (amountNumberPattern.matches(cur) && idx + 1 < rawTexts.size && rawTexts[idx + 1] == "元") {
+                texts.add(cur + "元")
+                idx += 2
+            } else {
+                texts.add(cur)
+                idx++
+            }
+        }
         // Never request pixels to discover whether an unreadable container is a result
         // or a password page. Success evidence is required BEFORE the screenshot API.
         val dedicated = page.packageName == PaymentApps.WECHAT && page.activity in dedicatedWechatResults
@@ -52,7 +83,8 @@ object PaymentPageDetector {
             val status = value.removePrefix("当前状态").removePrefix("交易状态").trimStart(':', '：')
             status in successStatuses ||
                 dedicated && receivedStatus.matches(status) ||
-                successWithMessage.matches(status)
+                successWithMessage.matches(status) ||
+                paidToRecipient.matches(status)
         }
         if (!success) return null
         val actualAmounts = texts.flatMapIndexed { index, text ->
@@ -72,7 +104,7 @@ object PaymentPageDetector {
         if (selectedAmounts.size != 1 || selectedAmounts.single() <= 0) return null
         val transaction = transactionId(texts)
         val hasTime = listOf("支付时间", "付款时间", "转账时间", "交易时间", "收款时间").any(joined::contains)
-        val completionControl=texts.any { it in setOf("完成","返回商家","返回商户","返回应用","完成付款","继续购物") }
+        val completionControl=texts.any { it in setOf("完成","返回商家","返回商户","返回应用","完成付款","继续购物","确定","知道了","关闭") }
         val genericWeb = listOf("webview", "webactivity", "h5", "nebula", "browser").any(page.activity.lowercase()::contains)
         if (page.packageName == PaymentApps.TAOBAO) {
             // Product/order pages are insufficient. Require a paid total or transaction structure.
