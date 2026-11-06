@@ -53,7 +53,7 @@ android.sourceSets.getByName("main").java.setSrcDirs(listOf(generated))
 kotlin.sourceSets.getByName("main").kotlin.setSrcDirs(listOf(generated))
 android.sourceSets.getByName("main").assets.srcDir(generatedAssets)
 tasks.matching { it.name.startsWith("compile") && it.name.endsWith("Kotlin") }.configureEach { dependsOn(generateMemoryAdapter) }
-tasks.matching { it.name.startsWith("merge") && it.name.endsWith("Assets") }.configureEach { dependsOn(generateMemoryAdapter) }
+tasks.matching { (it.name.startsWith("merge") || it.name.startsWith("package")) && it.name.endsWith("Assets") }.configureEach { dependsOn(generateMemoryAdapter) }
 
 dependencies {
     for (runtime in listOf("onnxruntime-reduced", "opencv-minimal")) {
