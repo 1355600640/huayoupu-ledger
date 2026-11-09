@@ -38,35 +38,28 @@ class RecognitionBanner(private val service:Context) {
                 elevation=dp(8).toFloat();importantForAccessibility=View.IMPORTANT_FOR_ACCESSIBILITY_YES
                 accessibilityLiveRegion=View.ACCESSIBILITY_LIVE_REGION_POLITE
             }
-            val openIntent=recordId?.takeIf { it>0 }?.let { id ->
+            val targetRecordId=recordId?.takeIf { it>0 }
+            val openIntent=targetRecordId?.let { id ->
                 android.content.Intent(service,net.ankio.ledger.ui.MainActivity::class.java).apply {
                     action=net.ankio.ledger.ui.MainActivity.OPEN_RECORD
+                    data=android.net.Uri.parse("ledger://record/$id")
                     putExtra("recordId",id)
                     flags=android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
                 }
             }
             val clickListener = if(onRepair!=null) {
-                View.OnClickListener { removeNow();onRepair() }
+                View.OnClickListener {
+                    row.isClickable=false
+                    onRepair()
+                    removeNow()
+                }
             } else if(openIntent!=null) {
                 View.OnClickListener {
+                    row.isClickable=false
+                    // Launch while the accessibility overlay window is still attached and visible
+                    // so system_server grants visible-window BAL privileges before removal.
+                    launchOpenIntent(openIntent,targetRecordId)
                     removeNow()
-                    runCatching { service.startActivity(openIntent) }
-                    if (android.os.Build.VERSION.SDK_INT >= 34) {
-                        runCatching {
-                            val pendingIntent = android.app.PendingIntent.getActivity(
-                                service,
-                                (recordId and 0xffff).toInt(),
-                                openIntent,
-                                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
-                            )
-                            val options = android.app.ActivityOptions.makeBasic().apply {
-                                setPendingIntentBackgroundActivityStartMode(
-                                    android.app.ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
-                                )
-                            }.toBundle()
-                            pendingIntent.send(options)
-                        }
-                    }
                 }
             } else null
 
@@ -80,13 +73,11 @@ class RecognitionBanner(private val service:Context) {
             },LinearLayout.LayoutParams(dp(20),dp(20)).apply { rightMargin=dp(10) })
             val textView = TextView(service).apply {
                 text=display;textSize=14f;setTextColor(Color.WHITE);setSingleLine(true);ellipsize=android.text.TextUtils.TruncateAt.END;maxWidth=service.resources.displayMetrics.widthPixels-dp(104)
-                if(clickListener!=null) setOnClickListener(clickListener)
             }
             row.addView(textView,LinearLayout.LayoutParams(-2,-2))
             if(openIntent!=null) {
                 row.addView(TextView(service).apply {
                     text=" ›";textSize=14f;setTextColor(0xb3ffffff.toInt())
-                    if(clickListener!=null) setOnClickListener(clickListener)
                 },LinearLayout.LayoutParams(-2,-2))
             }
             val params=WindowManager.LayoutParams(-2,-2,WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
@@ -102,10 +93,10 @@ class RecognitionBanner(private val service:Context) {
             if(added) {
                 delivery="capsule"
                 if(android.animation.ValueAnimator.areAnimatorsEnabled()) {
-                    row.alpha=0f;row.translationY=dp(52).toFloat()
-                    row.animate().alpha(1f).translationY(0f).setDuration(440).setInterpolator(PathInterpolator(.16f,1f,.3f,1f)).start()
+                    row.alpha=0f;row.scaleX=0.96f;row.scaleY=0.96f
+                    row.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(200).setInterpolator(PathInterpolator(.16f,1f,.3f,1f)).start()
                 }
-                if(!loading) { hide=Runnable { row.animate().alpha(0f).translationY(-dp(12).toFloat()).setDuration(220).withEndAction { if(view===row) removeNow() }.start() };handler.postDelayed(hide!!,3600) }
+                if(!loading) { hide=Runnable { row.animate().alpha(0f).scaleX(0.96f).scaleY(0.96f).setDuration(180).withEndAction { if(view===row) removeNow() }.start() };handler.postDelayed(hide!!,3600) }
             } else {
                 view=null
                 delivery="toast"
@@ -113,6 +104,37 @@ class RecognitionBanner(private val service:Context) {
             }
             service.ledger.executionLog.event("ocr","feedback",delivery,diagnostics())
         }
+    }
+    private fun launchOpenIntent(openIntent:android.content.Intent,recordId:Long) {
+        if(service !is android.accessibilityservice.AccessibilityService) {
+            runCatching { service.startActivity(openIntent) }
+            return
+        }
+        if(android.os.Build.VERSION.SDK_INT>=34) {
+            @Suppress("DEPRECATION")
+            val bgMode=if(android.os.Build.VERSION.SDK_INT>=36) {
+                android.app.ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOW_ALWAYS
+            } else {
+                android.app.ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
+            }
+            runCatching {
+                val creatorOptions=android.app.ActivityOptions.makeBasic()
+                    .setPendingIntentCreatorBackgroundActivityStartMode(bgMode)
+                    .toBundle()
+                val senderOptions=android.app.ActivityOptions.makeBasic()
+                    .setPendingIntentBackgroundActivityStartMode(bgMode)
+                    .toBundle()
+                val pendingIntent=android.app.PendingIntent.getActivity(
+                    service,
+                    (recordId xor (recordId ushr 32)).toInt() and 0x7fffffff,
+                    openIntent,
+                    android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE,
+                    creatorOptions
+                )
+                pendingIntent.send(service,0,null,null,null,null,senderOptions)
+            }
+        }
+        runCatching { service.startActivity(openIntent) }
     }
     private fun compactMessage(message:String):String=when {
         message.startsWith("已记录账单") || message.startsWith("已记账") || message.startsWith("金额待核对") -> message

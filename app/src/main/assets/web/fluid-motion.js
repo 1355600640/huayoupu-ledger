@@ -90,7 +90,7 @@ window.FluidMotion = (() => {
       panel._fade = shadeFade;
     }
 
-    animation.onfinish = () => {
+    const finish = () => {
       if (panel._morph !== animation) return;
       panel._morph = null;
       if (reverse) {
@@ -107,6 +107,14 @@ window.FluidMotion = (() => {
       panel.style.willChange = '';
       done();
     };
+
+    animation.onfinish = finish;
+
+    setTimeout(() => {
+      if (panel._morph === animation && animation.playState === 'running') {
+        try { animation.finish(); } catch (_) { finish(); }
+      }
+    }, duration + 180);
   }
 
   return { run, stop };

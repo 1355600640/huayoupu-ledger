@@ -23,13 +23,14 @@ class RecognitionBannerFallbackTest {
         var capsule:View?=null
         var flags=0
         var opened:android.content.Intent?=null
+        var attachedDuringLaunch=false
         val manager=object:WindowManager by app.getSystemService(WindowManager::class.java) {
             override fun addView(view:View,params:ViewGroup.LayoutParams) { capsule=view;flags=(params as WindowManager.LayoutParams).flags }
             override fun removeViewImmediate(view:View) { capsule=null }
         }
         val context=object:ContextWrapper(app) {
             override fun getSystemService(name:String):Any?=if(name==Context.WINDOW_SERVICE)manager else super.getSystemService(name)
-            override fun startActivity(intent:android.content.Intent) { opened=intent }
+            override fun startActivity(intent:android.content.Intent) { attachedDuringLaunch=capsule!=null;opened=intent }
         }
         val banner=RecognitionBanner(context)
         val instrumentation=InstrumentationRegistry.getInstrumentation()
@@ -42,7 +43,9 @@ class RecognitionBannerFallbackTest {
             banner.show("已记账 ¥ 22.50",recordId=42);waitForCapsule()
             assertEquals(0,flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
             instrumentation.runOnMainSync { capsule!!.performClick() }
+            assertTrue("Overlay window must stay attached while initiating activity launch",attachedDuringLaunch)
             assertEquals(net.ankio.ledger.ui.MainActivity.OPEN_RECORD,opened!!.action)
+            assertEquals("ledger://record/42",opened!!.dataString)
             assertEquals(42L,opened!!.getLongExtra("recordId",0))
             opened=null;var repaired=false
             banner.show("请开启页面识别权限",onRepair={repaired=true},recordId=42);waitForCapsule()

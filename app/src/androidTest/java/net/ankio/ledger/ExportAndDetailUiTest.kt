@@ -47,6 +47,10 @@ class ExportAndDetailUiTest {
                 assertEquals(fixture.capture.text,web.text("draft.rawText"))
                 assertEquals("true",web.value("(()=>{const r=JSON.parse(LedgerNative.snapshot()).records.find(r=>r.id===${saved.id});return !('rawText' in r)&&!('history' in r)&&'historyRevision' in r})()"))
                 assertEquals("1",web.value("draft.history.length"))
+                web.run("cancelEditor(true);notify('记账成功',${saved.id})")
+                web.await("!recordPanelOpen && document.querySelector('.toast.show.clickable')!==null")
+                web.run("document.querySelector('.toast').click()")
+                web.await("recordPanelOpen && draft?.id===${saved.id}")
             }
         } finally { app.store.delete(saved.id);app.changed() }
     }

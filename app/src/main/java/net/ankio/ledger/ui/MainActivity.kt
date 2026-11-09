@@ -54,11 +54,12 @@ class MainActivity : Activity() {
         config.setLocale(java.util.Locale.SIMPLIFIED_CHINESE)
         @Suppress("DEPRECATION")
         resources.updateConfiguration(config, resources.displayMetrics)
-        pendingCaptureRepair=intent.action==net.ankio.ledger.capture.CaptureHealth.REPAIR
-        pendingRecordId=savedInstanceState?.getLong("pendingRecordId",0)?.takeIf { it>0 }
-            ?:intent.takeIf { it.action==OPEN_RECORD }?.getLongExtra("recordId",0)?.takeIf { it>0 }
-        pendingOpenManual=savedInstanceState?.getBoolean("pendingOpenManual",false)
-            ?:(intent.action==ACTION_ADD_RECORD || intent.getBooleanExtra(EXTRA_OPEN_MANUAL,false))
+        val launchRecordId=extractRecordId(intent)
+        pendingRecordId=launchRecordId
+            ?:savedInstanceState?.getLong("pendingRecordId",0)?.takeIf { it>0 }
+        pendingCaptureRepair=pendingRecordId==null && intent.action==net.ankio.ledger.capture.CaptureHealth.REPAIR
+        pendingOpenManual=pendingRecordId==null && (savedInstanceState?.getBoolean("pendingOpenManual",false)
+            ?:(intent.action==ACTION_ADD_RECORD || intent.getBooleanExtra(EXTRA_OPEN_MANUAL,false)))
         window.setDecorFitsSystemWindows(false)
         savedPageState = savedInstanceState?.getString("pageState")
         pendingChannel = savedInstanceState?.getString("pendingChannel")?.let { key -> ChannelSettings.Channel.entries.firstOrNull { it.key == key } }
@@ -131,12 +132,16 @@ class MainActivity : Activity() {
                     savedPageState = null
                     refresh()
                     renderImportState(ledger.importer.state.value)
-                    permissionSetup.resume()
-                    resumeCaptureRepair()
-                    openPendingRecord()
-                    if (pendingOpenManual) {
-                        pendingOpenManual = false
-                        openManualRecord()
+                    if (pendingRecordId != null) {
+                        if (permissionSetup.active) permissionSetup.cancel()
+                        openPendingRecord()
+                    } else {
+                        permissionSetup.resume()
+                        resumeCaptureRepair()
+                        if (pendingOpenManual) {
+                            pendingOpenManual = false
+                            openManualRecord()
+                        }
                     }
                 }
             }
@@ -189,8 +194,8 @@ class MainActivity : Activity() {
                         val amount=persisted.bill.amountCents
                         if(persisted.state==RecordState.POSTED && amount!=null) {
                             ledger.captureHealth.successful(persisted.id,"image")
-                            message("已记录账单，${net.ankio.ledger.core.Money.formatDisplay(amount)} 元")
-                        } else message("金额待核对")
+                            message("已记录账单，${net.ankio.ledger.core.Money.formatDisplay(amount)} 元", persisted.id)
+                        } else message("金额待核对", persisted.id)
                     }
                     IngestResult.DuplicateSkipped -> { dispatch("importStatus", "{\"working\":false}"); message("识别完成，请查看账本") }
                     IngestResult.Ignored -> { dispatch("importStatus", "{\"working\":false}"); message("没有识别到账单文字，可换图或手动记账") }
@@ -224,7 +229,16 @@ class MainActivity : Activity() {
     internal fun showSetup(state:JSONObject) { if(ready)dispatch("permissionSetup",state.toString()) }
     internal fun setupRequestPermission(channel:ChannelSettings.Channel) { requestChannelPermission(channel);pendingChannel=null }
     internal fun setupEnableChannel(channel:ChannelSettings.Channel) { enableChannel(channel) }
-    fun message(value: String) { if (ready) dispatch("message", JSONObject.quote(value)) else Toast.makeText(this, value, Toast.LENGTH_LONG).show() }
+    fun message(value: String, recordId: Long? = null) {
+        if (ready) {
+            val payload = if (recordId != null && recordId > 0) {
+                JSONObject().put("text", value).put("recordId", recordId).toString()
+            } else {
+                JSONObject.quote(value)
+            }
+            dispatch("message", payload)
+        } else Toast.makeText(this, value, Toast.LENGTH_LONG).show()
+    }
     private fun handleBack() {
         modelPage?.let { it.back(); return }
         if (!ready) { moveTaskToBack(true); return }
@@ -256,22 +270,36 @@ class MainActivity : Activity() {
         if (::webView.isInitialized) {
             webView.onResume()
             refresh()
-            permissionSetup.resume()
-            resumeCaptureRepair()
-            openPendingRecord()
-            if (pendingOpenManual) {
-                pendingOpenManual = false
-                openManualRecord()
+            if (pendingRecordId != null) {
+                if (permissionSetup.active) permissionSetup.cancel()
+                openPendingRecord()
+            } else {
+                permissionSetup.resume()
+                resumeCaptureRepair()
+                if (pendingOpenManual) {
+                    pendingOpenManual = false
+                    openManualRecord()
+                }
             }
         }
     }
+    private fun extractRecordId(intent: Intent?): Long? {
+        if (intent == null) return null
+        if (intent.action != OPEN_RECORD && intent.data?.scheme != "ledger") return null
+        return intent.getLongExtra("recordId", 0).takeIf { it > 0 }
+            ?: intent.data?.lastPathSegment?.toLongOrNull()?.takeIf { it > 0 }
+    }
     override fun onNewIntent(intent:Intent) {
         super.onNewIntent(intent);setIntent(intent)
-        if(intent.action==net.ankio.ledger.capture.CaptureHealth.REPAIR) { pendingCaptureRepair=true;resumeCaptureRepair() }
-        if(intent.action==OPEN_RECORD) {
-            pendingRecordId=intent.getLongExtra("recordId",0).takeIf { it>0 }
-            if(ready && captureRestoreResumed) openPendingRecord()
+        val targetRecordId = extractRecordId(intent)
+        if (targetRecordId != null) {
+            pendingRecordId = targetRecordId
+            pendingOpenManual = false
+            pendingCaptureRepair = false
+            if (ready && captureRestoreResumed) openPendingRecord()
+            return
         }
+        if(intent.action==net.ankio.ledger.capture.CaptureHealth.REPAIR) { pendingCaptureRepair=true;resumeCaptureRepair() }
         if(intent.action==ACTION_ADD_RECORD || intent.getBooleanExtra(EXTRA_OPEN_MANUAL,false)) {
             if(ready && captureRestoreResumed) openManualRecord() else pendingOpenManual=true
         }
@@ -284,8 +312,15 @@ class MainActivity : Activity() {
         if(!ready)return
         val id=pendingRecordId?:return
         pendingRecordId=null
+        pendingOpenManual=false
+        pendingCaptureRepair=false
+        csvPreviewSheet?.dismiss();csvPreviewSheet=null
+        modelPage?.dismiss(false)
+        if(permissionSetup.active)permissionSetup.cancel()
         // A one-shot result link must not reopen after a rotation or process recreation.
         intent.removeExtra("recordId")
+        if(intent.action==OPEN_RECORD)intent.action=null
+        if(intent.data?.scheme=="ledger")intent.data=null
         refresh();dispatch("openRecord",id.toString())
     }
     private fun resumeCaptureRepair() {

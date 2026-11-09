@@ -38,8 +38,12 @@ class PaymentRecognitionQueue(private val app:LedgerApp,
                     val result=factory().processPrepared(image,Source.OCR,pkg,id,::allowed)
                     if(allowed()) {
                         var message=completedMessage(id,result)
-                        if(isRecorded(message) && app.tasks.recordId(id)?.let { app.captureHealth.successful(it,pkg) }!=true)
-                            message="账单已移除，未新增记账"
+                        val validRecord = when {
+                            isPostedMessage(message) -> app.tasks.recordId(id)?.let { app.captureHealth.successful(it,pkg) }==true
+                            isReviewMessage(message) -> app.tasks.recordId(id)?.let(app.store::get)!=null
+                            else -> true
+                        }
+                        if(!validRecord) message="账单已移除，未新增记账"
                         feedback(message,false)
                     }
                 }
@@ -78,7 +82,9 @@ class PaymentRecognitionQueue(private val app:LedgerApp,
         IngestResult.Ignored -> "未识别到金额，请重试"
         is IngestResult.Skipped -> result.message
     }
-    private fun isRecorded(message:String)=message.startsWith("已记录账单") || message.startsWith("已记账") || message.startsWith("金额待核对")
+    private fun isPostedMessage(message:String)=message.startsWith("已记录账单") || message.startsWith("已记账")
+    private fun isReviewMessage(message:String)=message.startsWith("金额待核对")
+    private fun isRecorded(message:String)=isPostedMessage(message) || isReviewMessage(message)
     private fun deliver(id:Long,message:String,loading:Boolean) {
         val linked=if(!loading && isRecorded(message))app.tasks.recordId(id)?.takeIf { app.store.get(it)!=null } else null
         val display=if(!loading && isRecorded(message) && linked==null)"账单已移除，未新增记账" else message
