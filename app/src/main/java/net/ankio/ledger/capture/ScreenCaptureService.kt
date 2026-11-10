@@ -192,6 +192,11 @@ open class ScreenCaptureService:AccessibilityService() {
     }
     fun checkPaymentPages() { refreshScope();paymentMonitor.schedule() }
     internal fun automaticCaptureAvailable()=!busy.get() && ledger.captureQueue.hasCapacity()
+    internal fun paymentEventKey(page:PaymentMatch)="payment_page:$paymentBoot:${page.eventIdentity}"
+    internal fun hasHandledPaymentEvent(page:PaymentMatch):Boolean {
+        val key=paymentEventKey(page)
+        return ledger.store.hasCaptureEvent(key) || ledger.tasks.hasActivePaymentIdentity(key)
+    }
     fun paymentDiagnostics()=paymentMonitor.diagnostics()
         .put("feedback",banner.diagnostics())
         .put("captureBusy",busy.get()).put("queueSize",ledger.captureQueue.size())
@@ -259,7 +264,7 @@ open class ScreenCaptureService:AccessibilityService() {
                 val safe=if(automatic)paymentMonitor.confirms(page!!) else manual?.value?.let(net.ankio.ledger.core.CapturePrivacy::manualAllowed)==true
                 if(!safe || !allowed() || currentTarget(pkg,target.id)==null)throw PrivacyBlocked()
                 task=ledger.tasks.create(Source.OCR,if(automatic)"payment_auto:$pkg" else "shake:$pkg")
-                if(automatic)ledger.tasks.diagnose(task,"payment_identity","payment_page:$paymentBoot:${page!!.eventIdentity}")
+                if(automatic)ledger.tasks.diagnose(task,"payment_identity",paymentEventKey(page!!))
                 ledger.tasks.diagnose(task,"trigger",(if(automatic)"payment_auto; " else "")+trigger.details(startAtMs))
                 ledger.changed()
                 ledger.tasks.diagnose(task,"stage","screenshot")

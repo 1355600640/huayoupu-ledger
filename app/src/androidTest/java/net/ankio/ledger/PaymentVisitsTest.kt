@@ -87,4 +87,37 @@ class PaymentVisitsTest {
         navigation(visits,PaymentApps.ALIPAY,"com.alipay.mobile.MainActivity")
         assertEquals(first.eventIdentity,visits.detect(page(75))!!.eventIdentity)
     }
+
+    @Test fun wechatPromotionCouponAndMiniProgramReturnRetainsPaymentIdentity()=withVisits { visits,reopen ->
+        val first=visits.detect(page(7).copy(texts=listOf("支付成功","合成测试商店","¥12.34","领取5元优惠券","完成")))!!
+        for(subpage in listOf(
+            PaymentPage(PaymentApps.WECHAT,41,"com.tencent.mm.plugin.appbrand.launching.AppBrandLaunchProxyUI",emptyList()),
+            PaymentPage(PaymentApps.WECHAT,42,"com.tencent.mm.plugin.appbrand.ui.AppBrandUI00",emptyList()),
+            PaymentPage(PaymentApps.WECHAT,43,"com.tencent.mm.plugin.appbrand.ui.AppBrandUI",emptyList()),
+            PaymentPage(PaymentApps.WECHAT,44,"com.tencent.mm.plugin.card.ui.CardDetailUI",emptyList()),
+            PaymentPage(PaymentApps.WECHAT,45,"com.tencent.mm.plugin.shake.ui.ShakeReportUI",emptyList()),
+            PaymentPage(PaymentApps.WECHAT,46,"com.tencent.mm.plugin.profile.ui.ContactInfoUI",emptyList()),
+            PaymentPage(PaymentApps.WECHAT,47,"com.tencent.mm.plugin.brandservice.ui.timeline.preload.ui.TmplWebViewTooLMpUI",emptyList()),
+            PaymentPage(PaymentApps.WECHAT,48,"com.tencent.mm.plugin.webview.ui.tools.MMWebViewUI",listOf("领券中心","输入手机号领券","确认支付0.1元抢券"),editable=true),
+            PaymentPage(PaymentApps.WECHAT,49,PaymentPageDetector.WECHAT_LITE_OPAQUE_RESULT,listOf("填写发票抬头"),editable=true),
+        )) {
+            assertNull(subpage.activity,visits.detect(subpage))
+        }
+        // Returning to either the retained result window or a vendor-recreated result window after claiming a coupon must keep the same identity.
+        val returnedSameWindow=visits.detect(page(7).copy(texts=listOf("支付成功","合成测试商店","¥12.34","已领5.00元现金券","完成")))!!
+        assertEquals(first.eventIdentity,returnedSameWindow.eventIdentity)
+        val returnedRecreated=reopen().detect(page(72).copy(texts=listOf("支付成功","合成测试商店","¥12.34","已领5.00元现金券","完成")))!!
+        assertEquals(first.eventIdentity,returnedRecreated.eventIdentity)
+    }
+
+    @Test fun cancelledUpsellCashierReturningToOriginalResultWindowDoesNotDuplicate()=withVisits { visits,_ ->
+        val first=visits.detect(page(41))!!
+        // An upsell cashier opens in a separate window (42) on top of the retained result window (41).
+        assertNull(visits.detect(PaymentPage(PaymentApps.WECHAT,42,PaymentPageDetector.WECHAT_FRAMEWORK_RESULT,listOf("确认支付","¥1.00"))))
+        // User cancels the upsell and lands back on the original result window (41).
+        assertEquals(first.eventIdentity,visits.detect(page(41))!!.eventIdentity)
+        // A genuine second payment after returning to mini-program opens a new cashier/result window (43 -> 44) and gets a new identity.
+        assertNull(visits.detect(PaymentPage(PaymentApps.WECHAT,43,PaymentPageDetector.WECHAT_FRAMEWORK_RESULT,listOf("确认支付","¥12.34"))))
+        assertNotEquals(first.eventIdentity,visits.detect(page(44))!!.eventIdentity)
+    }
 }

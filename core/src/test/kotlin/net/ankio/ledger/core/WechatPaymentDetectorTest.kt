@@ -81,6 +81,7 @@ class WechatPaymentDetectorTest {
         val orderUi = "com.tencent.mm.plugin.wallet_core.ui.WalletOrderInfoNewUI"
         assertNotNull(PaymentPageDetector.detect(page("支付成功", "¥18.00", "已优惠¥2.00", "获得100积分", "完成", activity = orderUi)))
         assertNotNull(PaymentPageDetector.detect(page("支付成功", "¥50.00", "微信支付优惠¥5.00", "抽奖最高得88元", "完成", activity = orderUi)))
+        assertNotNull(PaymentPageDetector.detect(page("支付成功", "¥18.00", "已领¥5.00", "已领5.00元现金券", "完成", activity = orderUi)))
     }
 
     @Test fun paidToRecipientStatusDetectsSuccessfully() {

@@ -111,6 +111,10 @@ internal class PaymentPageMonitor(private val service:ScreenCaptureService,priva
             if(match!=null && service.automaticCaptureAvailable()) {
                 val key="${match.windowId}|${match.activity}"
                 if((rejectedEvents[key]?:-1L)<lastEventAt && claims.observe(match) && claims.claim(match)) {
+                    if(service.hasHandledPaymentEvent(match)) {
+                        service.ledger.executionLog.event("payment_auto","detection","already_captured",diagnostics())
+                        return
+                    }
                     service.ledger.executionLog.event("payment_auto","detection","matched",diagnostics())
                     capture(match);return
                 }

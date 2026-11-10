@@ -122,6 +122,11 @@ class RecognitionTasks(context:Context,private val name:String="recognition.db",
         while(c.moveToNext())if(JSONObject(c.getString(1)).optString("payment_identity")==identity)return@use c.getLong(0)
         null
     }
+    fun hasActivePaymentIdentity(identity:String):Boolean=readableDatabase.rawQuery(
+        "SELECT diagnostic FROM tasks WHERE status IN ('CAPTURING','QUEUED','RECOGNIZING') ORDER BY id DESC",null).use { c ->
+        while(c.moveToNext())if(JSONObject(c.getString(0)).optString("payment_identity")==identity)return@use true
+        false
+    }
     fun status(id:Long):String?=readableDatabase.rawQuery("SELECT status FROM tasks WHERE id=?",arrayOf(id.toString())).use { if(it.moveToFirst())it.getString(0) else null }
     fun recordId(id:Long):Long?=readableDatabase.rawQuery("SELECT record_id FROM tasks WHERE id=?",arrayOf(id.toString())).use {
         if(it.moveToFirst()&&!it.isNull(0))it.getLong(0) else null
